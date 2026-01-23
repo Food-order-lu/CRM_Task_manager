@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Livrando Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="/src/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-liv-dark text-white h-screen flex overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-liv-card border-r border-white/5 flex flex-col">
+    <div class="p-6">
+      <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Livrando
+      </h1>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-2">
+      <a href="/" class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
+        <span>📊</span>
+        <span class="font-medium">Dashboard</span>
+      </a>
+      <a href="/crm.html"
+        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+        <span>🏪</span>
+        <span class="font-medium">CRM Clients</span>
+      </a>
+      <a href="/tasks.html"
+        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+        <span>✅</span>
+        <span class="font-medium">Tâches</span>
+      </a>
+      <a href="/visits.html"
+        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+        <span>📅</span>
+        <span class="font-medium">Visites</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/5">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-500"></div>
+        <div>
+          <p class="text-sm font-medium">Admin</p>
+          <p class="text-xs text-gray-500">Livrando Manager</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-auto p-8">
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h2 class="text-3xl font-bold">Bonjour, Admin 👋</h2>
+        <p class="text-gray-400 mt-1">Voici ce qui se passe aujourd'hui chez Livrando.</p>
+      </div>
+      <button class="btn-primary" onclick="alert('Fonctionnalité rapide bientôt dispo')">
+        + Nouveau Lead
+      </button>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="glass-card p-6 border-l-4 border-blue-500">
+        <p class="text-gray-400 text-sm">Total Leads</p>
+        <p class="text-3xl font-bold mt-2" id="stat-leads">-</p>
+      </div>
+      <div class="glass-card p-6 border-l-4 border-orange-500">
+        <p class="text-gray-400 text-sm">Projets Actifs</p>
+        <p class="text-3xl font-bold mt-2" id="stat-projects">-</p>
+      </div>
+      <div class="glass-card p-6 border-l-4 border-green-500">
+        <p class="text-gray-400 text-sm">Tâches à faire</p>
+        <p class="text-3xl font-bold mt-2" id="stat-tasks">-</p>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Upcoming Visits -->
+      <div class="glass-card p-6 lg:col-span-2">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+          <span class="mr-2">📅</span> Prochaines Visites
+        </h3>
+        <div id="visits-list" class="space-y-3">
+          <div class="animate-pulse flex space-x-4">
+            <div class="flex-1 space-y-4 py-1">
+              <div class="h-4 bg-white/10 rounded w-3/4"></div>
+              <div class="h-4 bg-white/10 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Tasks -->
+      <div class="glass-card p-6">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+          <span class="mr-2">⚡</span> Tâches Urgentes
+        </h3>
+        <div id="tasks-list" class="space-y-3">
+          <!-- Tasks injected via JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="./src/js/dashboard.js"></script>
+</body>
+
+</html>

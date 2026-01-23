@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Clients - Livrando</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/src/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-liv-dark text-white h-screen flex overflow-hidden">
+
+    <!-- Sidebar (Same as Dashboard) -->
+    <aside class="w-64 bg-liv-card border-r border-white/5 flex flex-col">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
+                Livrando</h1>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/"
+                class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+                <span>📊</span>
+                <span class="font-medium">Dashboard</span>
+            </a>
+            <a href="/crm.html" class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
+                <span>🏪</span>
+                <span class="font-medium">CRM Clients</span>
+            </a>
+            <a href="/tasks.html"
+                class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+                <span>✅</span>
+                <span class="font-medium">Tâches</span>
+            </a>
+            <a href="/visits.html"
+                class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
+                <span>📅</span>
+                <span class="font-medium">Visites</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden flex flex-col">
+        <header class="p-8 border-b border-white/5 flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-bold">CRM Clients</h2>
+                <p class="text-gray-400 mt-1">Gérez vos leads et prospects.</p>
+            </div>
+            <button class="btn-primary" onclick="openModal()">
+                + Nouveau Lead
+            </button>
+        </header>
+
+        <!-- Kanban Board -->
+        <div class="flex-1 overflow-x-auto p-8">
+            <div class="flex space-x-6 h-full min-w-max">
+
+                <!-- Col: À démarcher -->
+                <div class="w-80 flex flex-col bg-white/5 rounded-xl border border-white/5">
+                    <div class="p-4 border-b border-white/5 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-300">📞 À démarcher</h3>
+                        <span class="bg-gray-700 text-xs px-2 py-0.5 rounded-full" id="count-todo">0</span>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto space-y-3" id="col-todo">
+                        <!-- Leads injected here -->
+                    </div>
+                </div>
+
+                <!-- Col: En cours -->
+                <div class="w-80 flex flex-col bg-blue-500/5 rounded-xl border border-blue-500/20">
+                    <div class="p-4 border-b border-blue-500/10 flex justify-between items-center">
+                        <h3 class="font-bold text-blue-300">⚡ En cours</h3>
+                        <span class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full"
+                            id="count-progress">0</span>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto space-y-3" id="col-progress"></div>
+                </div>
+
+                <!-- Col: Gagné -->
+                <div class="w-80 flex flex-col bg-green-500/5 rounded-xl border border-green-500/20">
+                    <div class="p-4 border-b border-green-500/10 flex justify-between items-center">
+                        <h3 class="font-bold text-green-300">🎉 Gagné</h3>
+                        <span class="bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full"
+                            id="count-won">0</span>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto space-y-3" id="col-won"></div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Création Lead -->
+    <div id="modal-overlay"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+        <div
+            class="bg-liv-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4 transform transition-all">
+            <div class="p-6 border-b border-white/5">
+                <h3 class="text-xl font-bold">🏪 Nouveau Lead</h3>
+            </div>
+            <form id="lead-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Nom du Commerce *</label>
+                    <input type="text" name="name" required
+                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        placeholder="Ex: Restaurant Le Gourmet">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Contact</label>
+                        <input type="text" name="contact"
+                            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                            placeholder="Jean Dupont">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Téléphone</label>
+                        <input type="tel" name="phone"
+                            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                            placeholder="+352 ...">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                    <input type="email" name="email"
+                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                        placeholder="contact@restaurant.lu">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Statut</label>
+                    <select name="status"
+                        class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
+                        <option value="À démarcher">📞 À démarcher</option>
+                        <option value="En cours">⚡ En cours</option>
+                        <option value="Gagné">🎉 Gagné</option>
+                    </select>
+                </div>
+            </form>
+            <div class="p-6 border-t border-white/5 flex justify-end space-x-3">
+                <button type="button" onclick="closeModal()"
+                    class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Annuler</button>
+                <button type="submit" form="lead-form" class="btn-primary">Créer le Lead</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/js/crm.js"></script>
+</body>
+
+</html>
