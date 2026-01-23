@@ -17,7 +17,6 @@ export async function initProjects() {
             const card = document.createElement('div');
             card.className = 'glass-card p-6 hover:border-blue-500/30 transition-all flex flex-col group';
 
-            // Random progress for demo, in real it should be calculated from tasks
             const progress = project.progress !== undefined ? project.progress : Math.floor(Math.random() * 101);
 
             card.innerHTML = `
@@ -46,7 +45,6 @@ export async function initProjects() {
             `;
             grid.appendChild(card);
 
-            // Trigger animation
             setTimeout(() => {
                 const bar = document.getElementById(`bar-${project.id}`);
                 if (bar) bar.style.width = `${progress}%`;
@@ -55,6 +53,39 @@ export async function initProjects() {
 
     } catch (error) {
         console.error('Error fetching projects:', error);
+    }
+}
+
+// CRM Leads Loading Logic
+async function loadLeads() {
+    try {
+        const res = await fetch('http://localhost:3000/api/crm');
+        const leads = await res.json();
+        const select = document.getElementById('project-lead-select');
+
+        // Filter for leads that are 'En cours' or 'Gagné'
+        // Note: Check EXACT status strings from your CRM usage
+        const relevantLeads = leads.filter(l =>
+            l.status === 'En cours' ||
+            l.status === 'Gagné' ||
+            l.status === 'In Progress'
+        );
+
+        select.innerHTML = '<option value="">Sélectionner un lead...</option>' +
+            relevantLeads.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+
+        // Auto-fill Project Name on selection
+        select.addEventListener('change', (e) => {
+            const nameInput = document.getElementById('project-name');
+            if (e.target.value) {
+                nameInput.value = `Projet - ${e.target.value}`;
+            } else {
+                nameInput.value = '';
+            }
+        });
+
+    } catch (error) {
+        console.error('Error loading leads:', error);
     }
 }
 
@@ -68,6 +99,7 @@ const projectForm = document.getElementById('project-form');
 function openModal() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    loadLeads(); // Refresh leads when opening
     setTimeout(() => document.getElementById('project-name').focus(), 100);
 }
 

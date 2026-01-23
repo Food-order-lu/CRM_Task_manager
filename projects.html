@@ -89,11 +89,20 @@
             </div>
 
             <form id="project-form" class="space-y-5">
+                <!-- Lier à un Lead -->
+                <div>
+                    <label for="project-lead-select" class="form-label">Lier à un Lead (Restaurant)</label>
+                    <select id="project-lead-select" class="form-input text-gray-400">
+                        <option value="">Sélectionner un lead...</option>
+                        <!-- Options injected by JS -->
+                    </select>
+                </div>
+
                 <!-- Nom du projet -->
                 <div>
                     <label for="project-name" class="form-label">Nom du projet *</label>
                     <input type="text" id="project-name" name="name" class="form-input"
-                        placeholder="Ex: Déploiement Restaurant Le Gourmet" required>
+                        placeholder="Ex: Restaurant Le Gourmet" required>
                 </div>
 
                 <!-- Description -->
