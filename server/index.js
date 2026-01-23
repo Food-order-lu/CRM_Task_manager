@@ -139,12 +139,13 @@ app.post('/api/projects', async (req, res) => {
                 'Project Name': { title: [{ text: { content: name } }] },
                 'Status': { select: { name: status || '🔄 En cours' } },
                 'Priority': { select: { name: priority || '⚡ Moyenne' } },
-                'Description': { rich_text: [{ text: { content: description || '' } }] },
+                'Internal Notes': { rich_text: [{ text: { content: description || '' } }] },
                 ...(startDate && { 'Start Date': { date: { start: startDate, end: endDate || null } } })
             }
         });
         res.json(response);
     } catch (error) {
+        console.error('Error creating project:', error.body || error);
         res.status(500).json({ error: error.message });
     }
 });
