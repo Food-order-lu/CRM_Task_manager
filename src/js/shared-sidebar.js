@@ -54,10 +54,60 @@ export function initSidebar(initialUser = 'Tiago') {
     checkGoogleStatus(currentUserId);
 
     // Polling is fine, but we should use the currentUserId
+    // Backup Button Logic
+    const configSection = document.getElementById('google-status-card')?.parentElement;
+    if (configSection && !document.getElementById('btn-backup-dl')) {
+        const backupBtn = document.createElement('button');
+        backupBtn.id = 'btn-backup-dl';
+        backupBtn.className = 'w-full mt-2 py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 transition-all flex items-center justify-center space-x-2 border border-white/5';
+        backupBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Sauvegarde Locale</span>
+        `;
+        configSection.appendChild(backupBtn);
+
+        backupBtn.onclick = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`${API_URL}/backup`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rivego-backup-${new Date().toISOString().split('T')[0]}.db`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert('Erreur lors du téléchargement');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Erreur réseau');
+            }
+        };
+    }
+
     setInterval(() => {
         const btn = document.getElementById('btn-google-auth');
         if (btn && btn.innerText.includes('Se connecter')) {
             checkGoogleStatus(currentUserId);
         }
     }, 10000);
+    // Logout
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.innerText = 'Se déconnecter'; // Ensure text is set
+        logoutBtn.onclick = (e) => {
+            e.preventDefault();
+            localStorage.removeItem('authToken');
+            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/login.html';
+        };
+    }
 }

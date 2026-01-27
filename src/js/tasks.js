@@ -4,9 +4,30 @@ import { API_URL } from './config.js';
 import { initSidebar, updateSidebarUser } from './shared-sidebar.js';
 
 // State
+// State
 let currentUser = 'Tiago';
-let currentViewMode = 'list'; // 'list' or 'kanban'
+// Default to list view
+let currentViewMode = 'list';
 let showArchived = false;
+
+// UI Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    // Buttons are in static HTML now, so we can attach listeners safely once
+    document.getElementById('view-list')?.addEventListener('click', () => setViewMode('list'));
+    document.getElementById('view-kanban')?.addEventListener('click', () => setViewMode('kanban'));
+    document.getElementById('user-tiago')?.addEventListener('click', () => switchUser('Tiago'));
+    document.getElementById('user-dani')?.addEventListener('click', () => switchUser('Dani'));
+    document.getElementById('user-all')?.addEventListener('click', () => switchUser('all'));
+
+    fetchAllTasks();
+});
+
+function setViewMode(mode) {
+    currentViewMode = mode;
+    updateViewToggleUI();
+    // Re-render with existing data would be better, but fetching is safe
+    fetchAllTasks();
+}
 
 const validCategories = [
     '🏢 Administratif',
@@ -293,11 +314,17 @@ export async function fetchAllTasks() {
 }
 
 // Helpers (exposed to window for HTML events)
-window.allowDrop = (ev) => ev.preventDefault();
+// Helpers (exposed to window for HTML events)
+window.allowDrop = (ev) => {
+    if (showArchived) return; // No D&D in archive mode
+    ev.preventDefault();
+}
 window.dragTask = (ev, id) => ev.dataTransfer.setData("text", id);
 window.dropTask = (ev, newStatus) => {
+    if (showArchived) return; // Double check
     ev.preventDefault();
     const id = ev.dataTransfer.getData("text");
+    if (newStatus === 'Archived') return; // Cannot drag manually to Archived column (use button)
     updateTaskStatus(id, newStatus);
 };
 
@@ -476,6 +503,8 @@ taskForm?.addEventListener('submit', async (e) => {
         if (res.ok) {
             closeModal();
             fetchAllTasks();
+        } else {
+            alert('Erreur lors de la création');
         }
     } catch (error) {
         console.error('Error creating task:', error);

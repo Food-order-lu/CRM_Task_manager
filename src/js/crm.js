@@ -3,6 +3,36 @@ import { showConfirm } from './utils/confirm.js';
 import { API_URL } from './config.js';
 import { initSidebar } from './shared-sidebar.js';
 
+export let showArchived = false;
+
+window.setShowArchived = (value) => {
+    showArchived = value;
+    fetchLeads();
+    updateArchiveToggleUI();
+};
+
+function updateArchiveToggleUI() {
+    const activeBtn = document.getElementById('crm-view-active');
+    const archivedBtn = document.getElementById('crm-view-archived');
+    if (activeBtn && archivedBtn) {
+        if (showArchived) {
+            activeBtn.classList.replace('bg-blue-500', 'text-gray-400');
+            activeBtn.classList.add('hover:text-white');
+            activeBtn.classList.remove('text-white');
+
+            archivedBtn.classList.remove('text-gray-400', 'hover:text-white');
+            archivedBtn.classList.add('bg-blue-500', 'text-white', 'shadow-lg', 'shadow-blue-500/20');
+        } else {
+            activeBtn.classList.remove('text-gray-400', 'hover:text-white');
+            activeBtn.classList.add('bg-blue-500', 'text-white');
+
+            archivedBtn.classList.replace('bg-blue-500', 'text-gray-400');
+            archivedBtn.classList.remove('text-white', 'shadow-lg', 'shadow-blue-500/20');
+            archivedBtn.classList.add('hover:text-white');
+        }
+    }
+}
+
 export async function fetchLeads() {
     try {
         const res = await fetch(`${API_URL}/crm`);
@@ -25,6 +55,7 @@ export async function fetchLeads() {
             col.innerHTML = '';
 
             col.addEventListener('dragover', (e) => {
+                if (showArchived) return; // Disable drop in archive mode
                 e.preventDefault();
                 col.classList.add('bg-white/5');
             });
@@ -43,17 +74,44 @@ export async function fetchLeads() {
             });
         });
 
-        leads.forEach(lead => {
+        // Filtering
+        const filteredLeads = leads.filter(l => {
+            if (showArchived) return l.status === 'Archivé';
+            return l.status !== 'Archivé';
+        });
+
+        filteredLeads.forEach(lead => {
             const card = document.createElement('div');
             card.className = 'glass-card p-4 hover:border-white/30 transition-all cursor-move group';
+            // Status-specific Actions
+            let archiveBtn = '';
+            if (lead.status === 'Gagné' && !showArchived) {
+                archiveBtn = `
+                <button class="text-gray-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all p-1" onclick="archiveLead('${lead.id}', true)" title="Archiver">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                </button>`;
+            } else if (showArchived) {
+                archiveBtn = `
+                <button class="text-gray-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all p-1" onclick="archiveLead('${lead.id}', false)" title="Désarchiver (Restaurer en Gagné)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                    </svg>
+                </button>`;
+            }
+
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-2 pointer-events-none">
                     <h4 class="font-bold text-white">${lead.name}</h4>
-                    <button class="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all pointer-events-auto p-1" onclick="deleteLead('${lead.id}', '${lead.name.replace(/'/g, "\\'")}')" title="Supprimer">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.177H8.082a2.25 2.25 0 01-2.244-2.177L7.103 5.42m11.021-3.112a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67m9.914 0a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67" />
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-1 pointer-events-auto">
+                        ${archiveBtn}
+                        <button class="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1" onclick="deleteLead('${lead.id}', '${lead.name.replace(/'/g, "\\'")}')" title="Supprimer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.177H8.082a2.25 2.25 0 01-2.244-2.177L7.103 5.42m11.021-3.112a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67m9.914 0a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 ${lead.contact ? `<p class="text-xs text-gray-400 mb-1 pointer-events-none">👤 ${lead.contact}</p>` : ''}
                 ${lead.phone ? `<p class="text-xs text-gray-400 pointer-events-none">📞 ${lead.phone}</p>` : ''}
@@ -66,15 +124,15 @@ export async function fetchLeads() {
                 e.dataTransfer.effectAllowed = 'move';
                 card.classList.add('opacity-50');
             });
+            card.addEventListener('dragend', () => card.classList.remove('opacity-50'));
 
-            card.addEventListener('dragend', () => {
-                card.classList.remove('opacity-50');
-            });
-
-            if (cols[lead.status]) {
-                cols[lead.status].appendChild(card);
+            if (showArchived) {
+                // In Archived mode, put everything in the last column or a specially designated active column for visibility
+                // We'll put them in 'Gagné' column (visually 3rd col) for now as a container
+                cols['Gagné'].appendChild(card);
             } else {
-                cols['À démarcher'].appendChild(card);
+                if (cols[lead.status]) cols[lead.status].appendChild(card);
+                else cols['À démarcher'].appendChild(card);
             }
         });
 
@@ -108,6 +166,23 @@ async function updateLeadStatus(id, newStatus) {
     }
 }
 
+window.archiveLead = async (id, shouldArchive) => {
+    const actionName = shouldArchive ? 'Archiver' : 'Restaurer';
+    const confirmed = await showConfirm({
+        title: `${actionName} le Commerce ?`,
+        message: shouldArchive ?
+            'Le commerce sera déplacé vers les archives et masqué du tableau actif.' :
+            'Le commerce retournera dans la colonne "Gagné".',
+        confirmText: actionName,
+        type: 'warning'
+    });
+
+    if (confirmed) {
+        const newStatus = shouldArchive ? 'Archivé' : 'Gagné';
+        await updateLeadStatus(id, newStatus);
+    }
+};
+
 window.deleteLead = async (id, name) => {
     const confirmed = await showConfirm({
         title: 'Supprimer le Lead ?',
@@ -125,7 +200,7 @@ window.deleteLead = async (id, name) => {
             console.error(error);
         }
     }
-}
+};
 
 fetchLeads();
 initSidebar();

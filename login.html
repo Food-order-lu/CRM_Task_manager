@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Rivego CRM Manager</title>
+    <link href="/src/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-liv-dark text-white h-screen flex items-center justify-center p-4">
+    <div class="glass-card p-8 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative overflow-hidden">
+        <!-- Background Decor -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-orange-500"></div>
+
+        <div class="text-center mb-8">
+            <h1
+                class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                Rivego CRM Manager</h1>
+            <p class="text-gray-400 text-sm">Espace de gestion sécurisé</p>
+        </div>
+
+        <!-- Step 1: Credentials -->
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                <input type="email" id="email"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    placeholder="votre@email.com" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Mot de passe</label>
+                <input type="password" id="password"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    placeholder="••••••••" required>
+            </div>
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-blue-500/25">
+                Se connecter
+            </button>
+        </form>
+
+        <!-- Step 2: 2FA -->
+        <form id="otp-form" class="space-y-6 hidden">
+            <div class="text-center mb-6">
+                <div
+                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Double Authentification</h3>
+                <p class="text-sm text-gray-400 mt-2">Entrez le code à 6 chiffres de votre application
+                    d'authentification.</p>
+            </div>
+
+            <div class="flex justify-center gap-2 mb-6" id="otp-inputs">
+                <!-- Inputs managed by JS -->
+                <input type="text" maxlength="6"
+                    class="w-full h-14 text-center text-2xl font-bold bg-white/5 border border-white/20 rounded-lg tracking-widest text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="000000" id="otp-code">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-orange-500/25">
+                Vérifier
+            </button>
+            <button type="button" id="back-to-login"
+                class="w-full mt-4 text-sm text-gray-500 hover:text-white transition-colors">
+                Retour
+            </button>
+        </form>
+
+        <div id="error-msg"
+            class="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center hidden">
+        </div>
+    </div>
+
+    <script type="module" src="/src/js/login.js"></script>
+</body>
+
+</html>
