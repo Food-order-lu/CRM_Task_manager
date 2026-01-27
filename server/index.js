@@ -5,6 +5,7 @@ import googleCalendar from './services/google-calendar.js';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 const app = express();
 const port = 3000;
@@ -19,16 +20,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-this';
 // Secret is a base32 string for TOTP
 const USERS = [
     {
-        email: 'rivego.lu@hotmail.com',
+        email: 'login@rivego.lu',
         password: 'dgr-1998101109-dgr',
         name: 'Tiago',
-        twoFactorSecret: 'KRVG4ZJANF2WQZLPN5XW63TWM5XXK2LOMUXG6Z3FOJQWIZLTMNRQ' // Example Secret
+        twoFactorSecret: 'KRVG4ZJANF2WQZLPN5XW63TWM5XXK2LOMUXG6Z3FOJQWIZLTMNRQ' // Secret 1 (Unique per user ideally in prod)
     },
     {
-        email: 'dani@livrando.lu',
+        email: 'rivego.lu@hotmail.com',
         password: 'dani-password',
         name: 'Dani',
-        twoFactorSecret: 'KRVG4ZJANF2WQZLPN5XW63TWM5XXK2LOMUXG6Z3FOJQWIZLTMNRQ' // Same for demo 
+        twoFactorSecret: 'KRVG4ZJANF2WQZLPN5XW63TWM5XXK2LOMUXG6Z3FOJQWIZLTMNRQ' // Secret 2
     }
 ];
 
@@ -73,8 +74,26 @@ app.post('/api/auth/login', (req, res) => {
     }
 
     // Returning a temp token to identify user during 2FA step
-    const tempToken = jwt.sign({ email: user.email, step: '2fa' }, JWT_SECRET, { expiresIn: '5m' });
     res.json({ requires2FA: true, tempToken });
+});
+
+app.get('/api/auth/qr-code', async (req, res) => {
+    const { email } = req.query; // Simple demo approach. In prod, use session/token.
+    const user = USERS.find(u => u.email === email);
+    if (!user) return res.status(404).send('User not found');
+
+    const otpauth_url = speakeasy.otpauthURL({
+        secret: user.twoFactorSecret,
+        label: `Rivego CRM (${user.email})`,
+        algorithm: 'sha1'
+    });
+
+    try {
+        const dataUrl = await QRCode.toDataURL(otpauth_url);
+        res.json({ qrCode: dataUrl });
+    } catch (err) {
+        res.status(500).json({ error: 'Error generating QR' });
+    }
 });
 
 app.post('/api/auth/verify-2fa', (req, res) => {
@@ -86,28 +105,17 @@ app.post('/api/auth/verify-2fa', (req, res) => {
 
         const user = USERS.find(u => u.email === decoded.email);
 
-        // Verify TOTP
-        // For testing/bootstrap, we can output a valid token if secret is not set up in an app yet
-        // In real usage: verify with speakeasy
-
-        /* 
-        // THIS IS HOW WE WOULD VERIFY IF USER HAD APP SET UP
+        // Verify TOTP (REAL VERIFICATION)
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: 'base32',
             token: token,
-            window: 1 // Allow 30s slack
+            window: 1 // Allow 30s slack (prev or next step)
         });
-        */
 
-        // For IMMEDIATE access as requested: accept ANY 6 digit code OR specific backdoor
-        // Since user asked for "how to connect", we assume they don't have the Authenticator setup yet.
-        // We will accept the code provided in the prompt if it matches a logic, or just bypass for now.
-        // ACTUALLY: User provided credentials but not the Secret for the App.
-        // Making it bypass for "000000" or correct calculation if possible.
-
-        // Let's make it simple: Valid if token length is 6.
-        if (!token || token.length !== 6) return res.status(400).json({ error: 'Code invalide' });
+        if (!verified) {
+            return res.status(400).json({ error: 'Code incorrect (Time-based)' });
+        }
 
         const authToken = generateToken(user);
 

@@ -74,7 +74,27 @@ backBtn.addEventListener('click', () => {
     otpForm.classList.add('hidden');
     loginForm.classList.remove('hidden');
     document.getElementById('password').value = '';
+    document.getElementById('qr-container').classList.add('hidden');
     hideError();
+});
+
+document.getElementById('show-qr-btn')?.addEventListener('click', async () => {
+    // We need the email from the tempToken (or state)
+    // For simplicity, we use the value from the form input since we just logged in
+    const email = document.getElementById('email').value;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/qr-code?email=${encodeURIComponent(email)}`);
+        if (res.ok) {
+            const data = await res.json();
+            document.getElementById('qr-image').src = data.qrCode;
+            document.getElementById('qr-container').classList.remove('hidden');
+        } else {
+            showError('Impossible de charger le QR Code');
+        }
+    } catch (e) {
+        showError('Erreur réseau');
+    }
 });
 
 function showError(msg) {
