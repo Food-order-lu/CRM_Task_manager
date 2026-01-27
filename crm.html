@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Clients - Livrando</title>
+    <title>Commerces - Livrando</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
             </a>
             <a href="/crm.html" class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
                 <span>🏪</span>
-                <span class="font-medium">CRM Clients</span>
+                <span class="font-medium">Commerces</span>
             </a>
             <a href="/projects.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
@@ -46,17 +46,36 @@
                 <span class="font-medium">Visites</span>
             </a>
         </nav>
+
+        <!-- Config Section -->
+        <div class="p-4 border-t border-white/5 space-y-4">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
+            <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400">Google Calendar</span>
+                    <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <button id="btn-google-auth"
+                    class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                    </svg>
+                    <span>Se connecter</span>
+                </button>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 overflow-hidden flex flex-col">
         <header class="p-8 border-b border-white/5 flex justify-between items-center">
             <div>
-                <h2 class="text-3xl font-bold">CRM Clients</h2>
-                <p class="text-gray-400 mt-1">Gérez vos leads et prospects.</p>
+                <h2 class="text-3xl font-bold">Commerces</h2>
+                <p class="text-gray-400 mt-1">Gérez vos commerces et prospects.</p>
             </div>
             <button class="btn-primary" onclick="openModal()">
-                + Nouveau Lead
+                + Nouveau Commerce
             </button>
         </header>
 
@@ -105,7 +124,7 @@
         <div
             class="bg-liv-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4 transform transition-all">
             <div class="p-6 border-b border-white/5">
-                <h3 class="text-xl font-bold">🏪 Nouveau Lead</h3>
+                <h3 class="text-xl font-bold">🏪 Nouveau Commerce</h3>
             </div>
             <form id="lead-form" class="p-6 space-y-4">
                 <div>
@@ -143,12 +162,12 @@
                         <option value="Gagné">🎉 Gagné</option>
                     </select>
                 </div>
+                <div class="pt-6 border-t border-white/5 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal()"
+                        class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Annuler</button>
+                    <button type="submit" class="btn-primary">Créer le Commerce</button>
+                </div>
             </form>
-            <div class="p-6 border-t border-white/5 flex justify-end space-x-3">
-                <button type="button" onclick="closeModal()"
-                    class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Annuler</button>
-                <button type="submit" form="lead-form" class="btn-primary">Créer le Lead</button>
-            </div>
         </div>
     </div>
 

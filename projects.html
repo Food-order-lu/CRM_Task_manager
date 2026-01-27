@@ -47,11 +47,30 @@
                 <span class="font-medium">Visites</span>
             </a>
         </nav>
+
+        <!-- Config Section -->
+        <div class="p-4 border-t border-white/5 space-y-4">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
+            <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400">Google Calendar</span>
+                    <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <button id="btn-google-auth"
+                    class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                    </svg>
+                    <span>Se connecter</span>
+                </button>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 overflow-auto p-8">
-        <header class="flex justify-between items-center mb-8">
+        <header class="flex justify-between items-center mb-6">
             <div>
                 <h2 class="text-3xl font-bold">Répertoire Projets</h2>
                 <p class="text-gray-400 mt-1">Suivi de l'avancement des déploiements clients.</p>
@@ -60,6 +79,24 @@
                 + Nouveau Projet
             </button>
         </header>
+
+        <!-- Status Tabs -->
+        <div class="flex items-center space-x-2 mb-8 bg-white/5 p-1 rounded-xl border border-white/5 w-fit">
+            <button onclick="filterByStatus('all')" id="filter-all"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all bg-blue-500 text-white">Tous</button>
+            <button onclick="filterByStatus('🎯 Planifié')" id="filter-planned"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">🎯
+                Planifié</button>
+            <button onclick="filterByStatus('🔄 En cours')" id="filter-progress"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">🔄
+                En cours</button>
+            <button onclick="filterByStatus('✅ Terminé')" id="filter-done"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">✅
+                Terminé</button>
+            <button onclick="filterByStatus('📁 Archivé')" id="filter-archived"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">📁
+                Archivé</button>
+        </div>
 
         <!-- Projects Grid -->
         <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

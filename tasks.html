@@ -29,7 +29,7 @@
             <a href="/crm.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
                 <span>🏪</span>
-                <span class="font-medium">CRM Clients</span>
+                <span class="font-medium">Commerces</span>
             </a>
             <a href="/projects.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
@@ -46,6 +46,25 @@
                 <span class="font-medium">Visites</span>
             </a>
         </nav>
+
+        <!-- Config Section -->
+        <div class="p-4 border-t border-white/5 space-y-4">
+            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
+            <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400">Google Calendar</span>
+                    <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <button id="btn-google-auth"
+                    class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                    </svg>
+                    <span>Se connecter</span>
+                </button>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content -->
@@ -67,19 +86,57 @@
                             onclick="switchUser('Dani')">
                             Dani
                         </button>
+                        <button id="user-all"
+                            class="user-switch px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white transition-all"
+                            onclick="switchUser('all')">
+                            Tous
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div class="flex space-x-3 items-center">
+                <!-- View Toggle -->
+                <div class="flex items-center space-x-1 bg-white/5 rounded-lg p-1 border border-white/10 mr-2">
+                    <button id="view-list"
+                        class="view-mode-switch px-2 py-1.5 transition-all rounded bg-blue-500 text-white"
+                        title="Vue Liste">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                    </button>
+                    <button id="view-kanban"
+                        class="view-mode-switch px-2 py-1.5 transition-all rounded text-gray-400 hover:bg-white/10"
+                        title="Vue Kanban">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 4.5v15m6-15v15m-10.5-15h15a2.25 2.25 0 012.25 2.25v13.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75a2.25 2.25 0 012.25-2.25z" />
+                        </svg>
+                    </button>
+                </div>
+
                 <select id="filter-category"
                     class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500">
                     <option value="all">Toutes Catégories</option>
                     <option value="🏢 Administratif">🏢 Administratif</option>
-                    <option value="🍴 Restaurants">🍴 Restaurants</option>
-                    <option value="💼 Commercial">💼 Commercial</option>
+                    <option value="💰 Comptabilité">💰 Comptabilité</option>
                     <option value="🔧 Opérations">🔧 Opérations</option>
-                    <option value="📋 Projets">📋 Projets</option>
+                    <option value="📜 Procédures">📜 Procédures</option>
+                </select>
+                <!-- Archive Toggle -->
+                <div class="flex items-center bg-white/5 rounded-lg p-1 border border-white/10 h-[38px]">
+                    <button id="tasks-view-active" onclick="setArchiveView(false)"
+                        class="px-3 py-1 text-xs font-bold rounded-md transition-all bg-blue-500 text-white">Actives</button>
+                    <button id="tasks-view-archived" onclick="setArchiveView(true)"
+                        class="px-3 py-1 text-xs font-bold rounded-md transition-all text-gray-400 hover:text-white">Archivées</button>
+                </div>
+                <select id="filter-commerce"
+                    class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    <option value="all">Tous les Commerces</option>
+                    <!-- Commerce options injected via JS -->
                 </select>
                 <button class="btn-primary" id="btn-new-task">
                     + Nouvelle Tâche
@@ -87,39 +144,12 @@
             </div>
         </header>
 
-        <!-- To Do List -->
-        <section class="mb-10">
-            <h3 class="text-xl font-bold mb-4 flex items-center">
-                <span class="bg-blue-500/10 text-blue-400 p-1.5 rounded-lg mr-2">📌</span>
-                À Faire
-            </h3>
-            <div class="bg-liv-card/30 rounded-xl border border-white/5 overflow-hidden">
-                <div
-                    class="grid grid-cols-12 gap-4 p-4 border-b border-white/5 text-sm font-medium text-gray-400 bg-white/5">
-                    <div class="col-span-1"></div> <!-- Checkbox -->
-                    <div class="col-span-5">Tâche</div>
-                    <div class="col-span-2">Catégorie</div>
-                    <div class="col-span-2">Date</div>
-                    <div class="col-span-2 text-center">Assigné à</div>
-                </div>
-                <div id="tasks-todo-container" class="divide-y divide-white/5 min-h-[100px]">
-                    <!-- Tasks injected via JS -->
-                </div>
+        <!-- Dynamic Content -->
+        <div id="view-container" class="pb-10">
+            <div class="flex items-center justify-center p-20">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
-        </section>
-
-        <!-- Done List -->
-        <section>
-            <h3 class="text-xl font-bold mb-4 flex items-center text-gray-400">
-                <span class="bg-green-500/10 text-green-400 p-1.5 rounded-lg mr-2">✅</span>
-                Terminées
-            </h3>
-            <div class="bg-liv-card/30 rounded-xl border border-white/5 overflow-hidden opacity-75">
-                <div id="tasks-done-container" class="divide-y divide-white/5">
-                    <!-- Done Tasks injected via JS -->
-                </div>
-            </div>
-        </section>
+        </div>
     </main>
 
     <!-- Modal Création Tâche -->
@@ -158,6 +188,15 @@
                     </select>
                 </div>
 
+                <!-- Commerce lié -->
+                <div>
+                    <label for="task-commerce" class="form-label">Commerce lié</label>
+                    <select id="task-commerce" name="commerceId" class="form-input">
+                        <option value="">-- Aucun --</option>
+                        <!-- Commerce options injected via JS -->
+                    </select>
+                </div>
+
                 <!-- Assigné à -->
                 <div>
                     <label class="form-label mb-2">Assigné à</label>
@@ -192,6 +231,7 @@
                         <option value="To do">📌 À faire</option>
                         <option value="In progress">🔄 En cours</option>
                         <option value="Done">✅ Terminé</option>
+                        <option value="Archived">📦 Archivé</option>
                     </select>
                 </div>
 

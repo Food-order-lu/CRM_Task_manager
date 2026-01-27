@@ -1,9 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { Client } from '@notionhq/client';
-
-dotenv.config();
+import { commerces, projects, tasks } from './database.js';
+import googleCalendar from './services/google-calendar.js';
 
 const app = express();
 const port = 3000;
@@ -11,184 +9,241 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
 
-const DB = {
-    CRM: process.env.NOTION_CRM_DB_ID,
-    PROJECTS: process.env.NOTION_PROJECTS_DB_ID,
-    TASKS: process.env.NOTION_TASKS_DB_ID
-};
+// --- Google Auth Routes ---
+app.get('/api/auth/google', (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId manquant' });
+
+    const url = googleCalendar.getAuthUrl(userId);
+    if (!url) return res.status(500).json({ error: 'Config Google non disponible' });
+    res.redirect(url);
+});
+
+app.get('/api/auth/google/callback', async (req, res) => {
+    const { code, state: userId } = req.query;
+    if (!userId) return res.status(400).send('<h1>Error</h1><p>UserId manquant dans le state Google.</p>');
+
+    const success = await googleCalendar.handleCallback(code, userId);
+    if (success) {
+        res.send(`<h1>Success!</h1><p>Connexion Google Calendar réussie pour ${userId}. Vous pouvez fermer cette fenêtre.</p><script>setTimeout(() => window.close(), 3000)</script>`);
+    } else {
+        res.status(500).send('<h1>Error</h1><p>Échec de la connexion Google Calendar.</p>');
+    }
+});
+
+app.get('/api/auth/status', (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId manquant' });
+    res.json({ googleConnected: googleCalendar.isEnabled(userId) });
+});
 
 // --- CRM Routes ---
-app.get('/api/crm', async (req, res) => {
+app.get('/api/crm', (req, res) => {
     try {
-        const response = await notion.databases.query({
-            database_id: DB.CRM,
-            sorts: [{ property: 'Status', direction: 'ascending' }]
-        });
-
-        const leads = response.results.map(page => ({
-            id: page.id,
-            name: page.properties['Business Name']?.title[0]?.plain_text || 'Sans nom',
-            status: page.properties['Status']?.select?.name || 'À démarcher',
-            contact: page.properties['Contact Person']?.rich_text[0]?.plain_text || '',
-            email: page.properties['Contact Email']?.email || '',
-            phone: page.properties['Contact Phone']?.phone_number || ''
-        }));
-
+        const leads = commerces.getAll();
         res.json(leads);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/crm', async (req, res) => {
-    const { name, status, contact, email, phone } = req.body;
+app.post('/api/crm', (req, res) => {
+    const { name, status, contact, email, phone, category } = req.body;
     try {
-        const response = await notion.pages.create({
-            parent: { database_id: DB.CRM },
-            properties: {
-                'Business Name': { title: [{ text: { content: name } }] },
-                'Status': { select: { name: status || 'À démarcher' } },
-                'Contact Person': { rich_text: [{ text: { content: contact || '' } }] },
-                'Contact Email': { email: email || null },
-                'Contact Phone': { phone_number: phone || null }
-            }
+        const lead = commerces.create({
+            name,
+            status: status || 'À démarcher',
+            category,
+            phone,
+            email,
+            notes: contact || ''
         });
-        res.json(response);
+
+        if (status === 'En cours' || status === 'Gagné' || status === 'In Progress') {
+            const existingProjects = projects.getAll().filter(p => p.name === `Projet - ${name}`);
+            if (existingProjects.length === 0) {
+                projects.create({
+                    name: `Projet - ${name}`,
+                    status: status === 'Gagné' ? '🔄 En cours' : '🎯 Planifié',
+                    description: `Projet généré automatiquement depuis le lead CRM: ${name}`
+                });
+            }
+        }
+
+        res.json(lead);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.patch('/api/crm/:id', async (req, res) => {
+app.patch('/api/crm/:id', (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     try {
-        // 1. Update Lead Status
-        const response = await notion.pages.update({
-            page_id: id,
-            properties: {
-                'Status': { select: { name: status } }
-            }
-        });
+        const lead = commerces.getById(id);
+        if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
-        // 2. Automation: Create Project if "En cours" or "Gagné"
+        commerces.update(id, { status });
+
         if (status === 'En cours' || status === 'Gagné' || status === 'In Progress') {
-            const leadName = response.properties['Business Name']?.title[0]?.plain_text || 'Nouveau Lead';
-
-            // Check if project already exists (simple duplicate check)
-            const existing = await notion.databases.query({
-                database_id: DB.PROJECTS,
-                filter: {
-                    property: 'Project Name',
-                    title: {
-                        equals: `Projet - ${leadName}`
-                    }
-                }
-            });
-
-            if (existing.results.length === 0) {
-                await notion.pages.create({
-                    parent: { database_id: DB.PROJECTS },
-                    properties: {
-                        'Project Name': { title: [{ text: { content: `Projet - ${leadName}` } }] },
-                        'Status': { select: { name: status === 'Gagné' ? 'In Progress' : 'Planned' } },
-                        'Priority': { select: { name: '⚡ Moyenne' } },
-                        'Description': { rich_text: [{ text: { content: `Projet généré automatiquement depuis le lead CRM: ${leadName}` } }] }
-                    }
+            const existingProjects = projects.getAll().filter(p => p.name === `Projet - ${lead.name}`);
+            if (existingProjects.length === 0) {
+                projects.create({
+                    name: `Projet - ${lead.name}`,
+                    status: status === 'Gagné' ? '🔄 En cours' : '🎯 Planifié',
+                    description: `Projet généré automatiquement depuis le lead CRM: ${lead.name}`
                 });
-                console.log(`Automated Project Created for: ${leadName}`);
             }
         }
 
-        res.json(response);
+        res.json({ id, status });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/crm/:id', (req, res) => {
+    try {
+        commerces.delete(req.params.id);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
 // --- Projects Routes ---
-app.get('/api/projects', async (req, res) => {
+app.get('/api/projects', (req, res) => {
     try {
-        const response = await notion.databases.query({
-            database_id: DB.PROJECTS,
-            sorts: [{ timestamp: 'created_time', direction: 'descending' }]
-        });
-
-        const projects = response.results.map(page => ({
-            id: page.id,
-            name: page.properties['Project Name']?.title[0]?.plain_text || 'Projet sans nom',
-            status: page.properties['Status']?.select?.name || 'In Progress',
-            // Simple calculation for demo (in real world count done tasks / total tasks)
-            progress: Math.floor(Math.random() * 80) + 20
-        }));
-
-        res.json(projects);
+        const allProjects = projects.getAll();
+        res.json(allProjects);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/projects', async (req, res) => {
-    const { name, description, status, priority, startDate, endDate } = req.body;
+app.get('/api/projects/:id/tasks', (req, res) => {
+    const { id } = req.params;
     try {
-        const response = await notion.pages.create({
-            parent: { database_id: DB.PROJECTS },
-            properties: {
-                'Project Name': { title: [{ text: { content: name } }] },
-                'Status': { select: { name: status || '🔄 En cours' } },
-                'Priority': { select: { name: priority || '⚡ Moyenne' } },
-                'Internal Notes': { rich_text: [{ text: { content: description || '' } }] },
-                ...(startDate && { 'Start Date': { date: { start: startDate, end: endDate || null } } })
-            }
+        const allTasks = tasks.getByProject(id);
+        const taskMap = {};
+        allTasks.forEach(t => taskMap[t.id] = { ...t, parentId: t.parent_id, dueDate: t.due_date, subTasks: [] });
+        const rootTasks = [];
+        allTasks.forEach(t => {
+            if (t.parent_id && taskMap[t.parent_id]) taskMap[t.parent_id].subTasks.push(taskMap[t.id]);
+            else rootTasks.push(taskMap[t.id]);
         });
-        res.json(response);
+        res.json(rootTasks);
     } catch (error) {
-        console.error('Error creating project:', error.body || error);
         res.status(500).json({ error: error.message });
     }
 });
+
+app.post('/api/projects', (req, res) => {
+    const { name, description, status } = req.body;
+    try {
+        const project = projects.create({ name, status: status || '🔄 En cours', description });
+        res.json(project);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.patch('/api/projects/:id', (req, res) => {
+    const { id } = req.params;
+    const { status, name, progress } = req.body;
+    try {
+        const updates = {};
+        if (status) updates.status = status;
+        if (name) updates.name = name;
+        if (progress !== undefined) updates.progress = progress;
+        projects.update(id, updates);
+        res.json({ id, ...updates });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+    try {
+        projects.delete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- Helper to update project progress ---
+async function updateProjectProgress(projectId) {
+    if (!projectId) return;
+    try {
+        const projectTasks = tasks.getByProject(projectId);
+        if (projectTasks.length === 0) {
+            projects.update(projectId, { progress: 0 });
+            return;
+        }
+        const doneTasks = projectTasks.filter(t => t.status === 'Done' || t.status === 'Terminé').length;
+        const progress = Math.round((doneTasks / projectTasks.length) * 100);
+        projects.update(projectId, { progress });
+    } catch (error) {
+        console.error('Error updating project progress:', error);
+    }
+}
 
 // --- Tasks Routes ---
-app.get('/api/tasks', async (req, res) => {
+app.get('/api/tasks', (req, res) => {
     try {
-        const response = await notion.databases.query({
-            database_id: DB.TASKS,
-            sorts: [{ property: 'Due Date', direction: 'ascending' }]
-        });
-
-        const tasks = response.results.map(page => ({
-            id: page.id,
-            name: page.properties['Task Name']?.title[0]?.plain_text || 'Sans nom',
-            category: page.properties['Task Category']?.select?.name || 'General',
-            status: page.properties['Status']?.select?.name || 'To do',
-            assignee: page.properties['Assigned To']?.select?.name || 'Unassigned',
-            dueDate: page.properties['Due Date']?.date?.start || null,
-            isInPerson: page.properties['In-person Visit?']?.checkbox || false
+        const allTasks = tasks.getAll().map(t => ({
+            id: t.id,
+            name: t.name,
+            category: t.category,
+            status: t.status,
+            assignee: t.assignee,
+            dueDate: t.due_date,
+            timeSlot: t.time_slot,
+            isInPerson: t.is_in_person === 1,
+            projectId: t.project_id,
+            commerceId: t.commerce_id,
+            commerceName: t.commerce_name
         }));
-
-        res.json(tasks);
+        res.json(allTasks);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/tasks', async (req, res) => {
-    const { name, category, assignee, dueDate, status, isInPerson, notes } = req.body;
+    const { name, category, assignee, dueDate, time, status, isInPerson, projectId, commerceId, parentId } = req.body;
     try {
-        const response = await notion.pages.create({
-            parent: { database_id: DB.TASKS },
-            properties: {
-                'Task Name': { title: [{ text: { content: name } }] },
-                'Task Category': { select: { name: category || '🔧 Opérations' } },
-                'Status': { select: { name: status || 'To do' } },
-                'Assigned To': { select: { name: assignee || 'Unassigned' } },
-                ...(dueDate && { 'Due Date': { date: { start: dueDate } } }),
-                'In-person Visit?': { checkbox: isInPerson || false }
-            }
+        const task = tasks.create({
+            name,
+            category: category || '🔧 Opérations',
+            assignee: assignee || 'Unassigned',
+            dueDate,
+            timeSlot: time,
+            status: status || 'To do',
+            isInPerson: isInPerson || false,
+            projectId,
+            commerceId,
+            parentId
         });
-        res.json(response);
+
+        if (projectId) await updateProjectProgress(projectId);
+
+        if (isInPerson) {
+            const assigneesList = (assignee || '').split(',').map(s => s.trim());
+            for (const userId of assigneesList) {
+                if (googleCalendar.isEnabled(userId)) {
+                    const gId = await googleCalendar.createGoogleEvent({ name, date: dueDate, time, assignee }, userId);
+                    if (gId) tasks.setGoogleEventId(task.id, gId);
+                }
+            }
+        }
+        res.json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -196,39 +251,96 @@ app.post('/api/tasks', async (req, res) => {
 
 app.patch('/api/tasks/:id', async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, name, dueDate, timeSlot, assignee, isInPerson } = req.body;
     try {
-        const response = await notion.pages.update({
-            page_id: id,
-            properties: {
-                'Status': { select: { name: status } }
+        const currentTask = tasks.getById(id);
+        if (!currentTask) return res.status(404).json({ error: 'Task not found' });
+
+        const updates = {};
+        if (status !== undefined) updates.status = status;
+        if (name !== undefined) updates.name = name;
+        if (dueDate !== undefined) updates.dueDate = dueDate;
+        if (timeSlot !== undefined) updates.timeSlot = timeSlot;
+        if (assignee !== undefined) updates.assignee = assignee;
+        if (isInPerson !== undefined) updates.isInPerson = isInPerson;
+
+        tasks.update(id, updates);
+
+        if (currentTask.project_id) await updateProjectProgress(currentTask.project_id);
+
+        const mergedTask = { ...currentTask, ...updates };
+        const shouldBeOnGoogle = mergedTask.is_in_person === 1 || mergedTask.isInPerson === true;
+        const assigneesList = (mergedTask.assignee || '').split(',').map(s => s.trim());
+
+        for (const userId of assigneesList) {
+            if (googleCalendar.isEnabled(userId)) {
+                if (currentTask.google_event_id) {
+                    if (!shouldBeOnGoogle) {
+                        await googleCalendar.deleteGoogleEvent(currentTask.google_event_id, userId);
+                        tasks.update(id, { googleEventId: null });
+                    } else {
+                        await googleCalendar.updateGoogleEvent(currentTask.google_event_id, {
+                            name: mergedTask.name,
+                            date: mergedTask.due_date || mergedTask.dueDate,
+                            time: mergedTask.time_slot || mergedTask.timeSlot,
+                            assignee: mergedTask.assignee
+                        }, userId);
+                    }
+                } else if (shouldBeOnGoogle) {
+                    const gId = await googleCalendar.createGoogleEvent({
+                        name: mergedTask.name,
+                        date: mergedTask.due_date || mergedTask.dueDate,
+                        time: mergedTask.time_slot || mergedTask.timeSlot,
+                        assignee: mergedTask.assignee
+                    }, userId);
+                    if (gId) tasks.update(id, { googleEventId: gId });
+                }
             }
-        });
-        res.json(response);
+        }
+        res.json({ id, ...updates });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// --- Dashboard Stats ---
-app.get('/api/stats', async (req, res) => {
+app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        const [crm, projects, tasks] = await Promise.all([
-            notion.databases.query({ database_id: DB.CRM }),
-            notion.databases.query({ database_id: DB.PROJECTS }),
-            notion.databases.query({ database_id: DB.TASKS })
-        ]);
+        const task = tasks.getById(req.params.id);
+        if (!task) return res.status(404).json({ error: 'Task not found' });
 
+        if (task.google_event_id) {
+            const assignees = (task.assignee || '').split(',').map(s => s.trim());
+            for (const userId of assignees) {
+                if (googleCalendar.isEnabled(userId)) {
+                    await googleCalendar.deleteGoogleEvent(task.google_event_id, userId);
+                }
+            }
+        }
+        tasks.delete(req.params.id);
+
+        if (task.project_id) await updateProjectProgress(task.project_id);
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/stats', (req, res) => {
+    try {
+        const allLeads = commerces.getAll();
+        const allProjects = projects.getAll();
+        const allTasks = tasks.getAll();
         res.json({
-            leads: crm.results.length,
-            projects: projects.results.length,
-            tasks: tasks.results.filter(t => t.properties['Status']?.select?.name !== 'Done').length
+            leads: allLeads.length,
+            projects: allProjects.filter(p => !p.status.includes('📁')).length,
+            tasks: allTasks.filter(t => t.status !== 'Done' && !t.project_id && !t.commerce_id).length
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running at http://0.0.0.0:${port}`);
 });
