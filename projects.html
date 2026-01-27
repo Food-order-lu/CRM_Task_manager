@@ -3,8 +3,9 @@
 
 <head>
     <script>
-        if (!localStorage.getItem('authToken')) window.location.href = '/login.html';
+        if (!localStorage.getItem('authToken')) window.location.href = '/';
     </script>
+    <meta charset="UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projets Clients - Rivego CRM Manager</title>
@@ -24,7 +25,7 @@
         </div>
 
         <nav class="flex-1 px-4 space-y-2">
-            <a href="/"
+            <a href="/dashboard.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
                 <span>📊</span>
                 <span class="font-medium">Dashboard</span>

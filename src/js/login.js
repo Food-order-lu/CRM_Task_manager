@@ -61,7 +61,7 @@ otpForm.addEventListener('submit', async (e) => {
         if (res.ok) {
             // Save token and redirect
             localStorage.setItem('authToken', data.token);
-            window.location.href = '/';
+            window.location.href = '/dashboard.html';
         } else {
             showError(data.error || 'Code incorrect');
         }

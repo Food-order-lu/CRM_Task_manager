@@ -2,196 +2,101 @@
 <html lang="fr" class="dark">
 
 <head>
-  <script>
-    if (!localStorage.getItem('authToken')) window.location.href = '/login.html';
-  </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rivego CRM Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="/src/style.css" rel="stylesheet">
+    <script>
+        // If already logged in, go to dashboard
+        if (localStorage.getItem('authToken')) window.location.href = '/dashboard.html';
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Rivego CRM Manager</title>
+    <link href="/src/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="bg-liv-dark text-white h-screen flex overflow-hidden">
+<body class="bg-liv-dark text-white h-screen flex items-center justify-center p-4">
+    <div class="glass-card p-8 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl relative overflow-hidden">
+        <!-- Background Decor -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-orange-500"></div>
 
-  <!-- Sidebar -->
-  <aside class="w-64 bg-liv-card border-r border-white/5 flex flex-col">
-    <div class="p-6">
-      <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Rivego
-        CRM Manager
-      </h1>
-    </div>
-
-    <nav class="flex-1 px-4 space-y-2">
-      <a href="/" class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
-        <span>📊</span>
-        <span class="font-medium">Dashboard</span>
-      </a>
-      <a href="/crm.html"
-        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-        <span>🏪</span>
-        <span class="font-medium">Commerces</span>
-      </a>
-      <a href="/projects.html"
-        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-        <span>📁</span>
-        <span class="font-medium">Projets</span>
-      </a>
-      <a href="/tasks.html"
-        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-        <span>✅</span>
-        <span class="font-medium">Tâches</span>
-      </a>
-      <a href="/visits.html"
-        class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-        <span>📅</span>
-        <span class="font-medium">Visites</span>
-      </a>
-    </nav>
-
-    <!-- Config Section -->
-    <div class="p-4 border-t border-white/5 space-y-4">
-      <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
-      <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs text-gray-400">Google Calendar</span>
-          <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
+        <div class="text-center mb-8">
+            <h1
+                class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent mb-2">
+                Rivego CRM Manager</h1>
+            <p class="text-gray-400 text-sm">Espace de gestion sécurisé</p>
         </div>
-        <button id="btn-google-auth"
-          class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
-          <svg class="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="currentColor"
-              d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-          </svg>
-          <span>Se connecter</span>
-        </button>
-      </div>
-    </div>
 
-    <div class="p-4 border-t border-white/5">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-red-500"></div>
-        <div>
-          <p class="text-sm font-medium">Admin</p>
-          <p class="text-xs text-gray-500">Rivego Manager</p>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="flex-1 overflow-auto p-8">
-    <header class="flex justify-between items-center mb-8">
-      <div>
-        <h2 class="text-3xl font-bold">Bonjour, Admin 👋</h2>
-        <p class="text-gray-400 mt-1">Voici ce qui se passe aujourd'hui chez Livrando.</p>
-      </div>
-      <button class="btn-primary" id="btn-open-lead-modal">
-        + Nouveau Commerce
-      </button>
-    </header>
-
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="glass-card p-6 border-l-4 border-blue-500">
-        <p class="text-gray-400 text-sm">Total Commerces</p>
-        <p class="text-3xl font-bold mt-2" id="stat-leads">-</p>
-      </div>
-      <div class="glass-card p-6 border-l-4 border-orange-500">
-        <p class="text-gray-400 text-sm">Projets Actifs</p>
-        <p class="text-3xl font-bold mt-2" id="stat-projects">-</p>
-      </div>
-      <div class="glass-card p-6 border-l-4 border-green-500">
-        <p class="text-gray-400 text-sm">Tâches à faire</p>
-        <p class="text-3xl font-bold mt-2" id="stat-tasks">-</p>
-      </div>
-    </div>
-
-    <!-- Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Upcoming Visits -->
-      <div class="glass-card p-6 lg:col-span-2">
-        <h3 class="text-xl font-bold mb-4 flex items-center">
-          <span class="mr-2">📅</span> Prochaines Visites
-        </h3>
-        <div id="visits-list" class="space-y-3">
-          <div class="animate-pulse flex space-x-4">
-            <div class="flex-1 space-y-4 py-1">
-              <div class="h-4 bg-white/10 rounded w-3/4"></div>
-              <div class="h-4 bg-white/10 rounded"></div>
+        <!-- Step 1: Credentials -->
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                <input type="email" id="email"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    placeholder="votre@email.com" required>
             </div>
-          </div>
-        </div>
-      </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Mot de passe</label>
+                <input type="password" id="password"
+                    class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    placeholder="••••••••" required>
+            </div>
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-blue-500/25">
+                Se connecter
+            </button>
+        </form>
 
-      <!-- Recent Tasks -->
-      <div class="glass-card p-6">
-        <h3 class="text-xl font-bold mb-4 flex items-center">
-          <span class="mr-2">⚡</span> Tâches Urgentes
-        </h3>
-        <div id="tasks-list" class="space-y-3">
-          <!-- Tasks injected via JS -->
+        <!-- Step 2: 2FA -->
+        <form id="otp-form" class="space-y-6 hidden">
+            <div class="text-center mb-6">
+                <!-- QR Code Section (Hidden by default) -->
+                <div id="qr-container" class="hidden mb-4 p-4 bg-white rounded-xl">
+                    <p class="text-gray-900 text-xs font-bold mb-2">Scanner avec Google Authenticator</p>
+                    <img id="qr-image" class="mx-auto w-32 h-32" />
+                </div>
+
+                <div
+                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 text-blue-400 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white">Double Authentification</h3>
+                <p class="text-sm text-gray-400 mt-2">Entrez le code à 6 chiffres de votre application
+                    d'authentification.</p>
+            </div>
+
+            <div class="flex justify-center gap-2 mb-6" id="otp-inputs">
+                <!-- Inputs managed by JS -->
+                <input type="text" maxlength="6"
+                    class="w-full h-14 text-center text-2xl font-bold bg-white/5 border border-white/20 rounded-lg tracking-widest text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="000000" id="otp-code">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg shadow-orange-500/25">
+                Vérifier
+            </button>
+            <button type="button" id="back-to-login"
+                class="w-full mt-4 text-sm text-gray-500 hover:text-white transition-colors">
+                Retour
+            </button>
+            <button type="button" id="show-qr-btn"
+                class="w-full mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                Afficher le QR Code (1ère connexion)
+            </button>
+        </form>
+
+        <div id="error-msg"
+            class="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center hidden">
         </div>
-      </div>
+        <div class="mt-6 text-center">
+            <span class="text-xs text-gray-600 font-mono">v1.0</span>
+        </div>
     </div>
-  </main>
 
-  <!-- Modal Création Lead (Dashboard Quick Action) -->
-  <div id="modal-overlay"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center">
-    <div
-      class="bg-liv-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4 transform transition-all">
-      <div class="p-6 border-b border-white/5">
-        <h3 class="text-xl font-bold">🏪 Nouveau Commerce</h3>
-      </div>
-      <form id="lead-form" class="p-6 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-1">Nom du Commerce *</label>
-          <input type="text" name="name" required
-            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-            placeholder="Ex: Restaurant Le Gourmet">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Contact</label>
-            <input type="text" name="contact"
-              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-              placeholder="Jean Dupont">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-400 mb-1">Téléphone</label>
-            <input type="tel" name="phone"
-              class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-              placeholder="+352 ...">
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-1">Email</label>
-          <input type="email" name="email"
-            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-            placeholder="contact@restaurant.lu">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-1">Statut Initial</label>
-          <select name="status"
-            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
-            <option value="À démarcher">📞 À démarcher</option>
-            <option value="En cours">⚡ En cours</option>
-            <option value="Gagné">🎉 Gagné</option>
-          </select>
-        </div>
-        <div class="pt-6 border-t border-white/5 flex justify-end space-x-3">
-          <button type="button" id="btn-close-lead-modal"
-            class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Annuler</button>
-          <button type="submit" class="btn-primary">Créer le Commerce</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script type="module" src="./src/js/dashboard.js"></script>
+    <script type="module" src="/src/js/login.js"></script>
 </body>
 
 </html>
