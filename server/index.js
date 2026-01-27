@@ -344,3 +344,5 @@ app.get('/api/stats', (req, res) => {
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${port}`);
 });
+
+export default app;
