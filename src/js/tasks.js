@@ -77,7 +77,7 @@ export async function fetchAllTasks() {
             // 1. Filter by User and exclude Project/Commerce Tasks
             let userTasks = tasks.filter(t => {
                 const matchesUser = currentUser === 'all' || (t.assignee && t.assignee.includes(currentUser));
-                return matchesUser && !t.projectId && !t.commerceId;
+                return matchesUser && !t.projectId;
             });
 
             // 1b. If a specific restaurant is selected, show its tasks (even if hidden from main list)
@@ -194,8 +194,9 @@ export async function fetchAllTasks() {
             return `
                 <div class="grid grid-cols-12 gap-4 p-4 border-b border-white/5 text-sm font-medium text-gray-400 bg-white/5">
                     <div class="col-span-1"></div>
-                    <div class="col-span-5">Tâche</div>
-                    <div class="col-span-2">Catégorie</div>
+                    <div class="col-span-4">Tâche</div>
+                    <div class="col-span-2">Restaurant</div>
+                    <div class="col-span-1">Catégorie</div>
                     <div class="col-span-2">Échéance</div>
                     <div class="col-span-1 text-center">Assigné</div>
                     <div class="col-span-1 text-center">Actions</div>
@@ -205,7 +206,7 @@ export async function fetchAllTasks() {
 
         function createListRow(task, isDone = false) {
             const isProgress = task.status === 'In progress' || task.status === 'En cours';
-            const commerceTag = task.commerceName ? `<span class="block text-[10px] text-orange-400 mt-0.5">🏪 ${task.commerceName}</span>` : '';
+            const restaurantName = task.commerceName ? task.commerceName : '-';
             const dateStatus = getDateStatus(task.dueDate);
 
             return `
@@ -217,12 +218,14 @@ export async function fetchAllTasks() {
                             class="w-5 h-5 rounded border-gray-600 ${isDone ? 'text-green-500 bg-liv-main' : (isProgress ? 'text-blue-500 border-blue-500' : 'text-gray-500 bg-liv-main')} focus:ring-offset-0 cursor-pointer"
                             onchange="cycleTaskStatus('${task.id}', '${task.status}')">
                     </div>
-                    <div class="col-span-5 font-medium flex flex-col ${isDone || task.status === 'Archived' ? 'line-through text-gray-500' : 'text-white'}">
+                    <div class="col-span-4 font-medium flex flex-col ${isDone || task.status === 'Archived' ? 'line-through text-gray-500' : 'text-white'}">
                         <span>${task.name}</span>
-                        ${commerceTag}
                     </div>
-                    <div class="col-span-2">
-                        <span class="text-xs px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5">${task.category}</span>
+                    <div class="col-span-2 text-[14px] font-bold text-orange-400 truncate">
+                        <span>${restaurantName}</span>
+                    </div>
+                    <div class="col-span-1">
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-300 border border-white/5 truncate block text-center">${task.category.replace(/^[^\s]+\s/, '')}</span>
                     </div>
                     <div class="col-span-2 text-sm text-gray-400 flex items-center space-x-2">
                         ${dateStatus.dot ? `<span class="w-2 h-2 rounded-full ${dateStatus.dot}"></span>` : ''}

@@ -26,8 +26,8 @@ export async function fetchTasks() {
         tasksList.innerHTML = '';
         visitsList.innerHTML = '';
 
-        // Urgent tasks (First 5 that are not done and NOT project/commerce-linked)
-        const urgentTasks = tasks.filter(t => t.status !== 'Done' && !t.projectId && !t.commerceId).slice(0, 5);
+        // Urgent tasks (First 5 that are not done and NOT project-linked)
+        const urgentTasks = tasks.filter(t => t.status !== 'Done' && !t.projectId).slice(0, 5);
 
         urgentTasks.forEach(task => {
             const div = document.createElement('div');
