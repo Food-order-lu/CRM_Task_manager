@@ -148,6 +148,25 @@ app.get('/api/auth/status', (req, res) => {
     res.json({ googleConnected: googleCalendar.isEnabled(userId) });
 });
 
+// --- Stats Route ---
+app.get('/api/stats', async (req, res) => {
+    try {
+        const [allLeads, allProjects, allTasks] = await Promise.all([
+            commerces.getAll(),
+            projects.getAll(),
+            tasks.getAll()
+        ]);
+
+        res.json({
+            leads: allLeads.length,
+            projects: allProjects.length,
+            tasks: allTasks.filter(t => t.status !== 'Done' && t.status !== 'Archived').length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // --- CRM Routes ---
 app.get('/api/crm', async (req, res) => {
     try {
