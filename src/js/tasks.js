@@ -168,40 +168,45 @@ export async function fetchAllTasks() {
 
     } catch (error) {
         console.error('Error fetching tasks:', error);
-        if (viewContainer) viewContainer.innerHTML = '<div class="p-8 text-center text-red-400">Erreur de chargement des données.</div>';
+        if (viewContainer) viewContainer.innerHTML = `<div class="p-8 text-center text-red-400">Erreur lors de la récupération des tâches : ${error.message}</div>`;
     }
 }
 
 function render() {
-    if (!viewContainer || !window.allTasks) return;
+    try {
+        if (!viewContainer || !window.allTasks) return;
 
-    const categoryFilter = filterSelect?.value || 'all';
-    const restaurantFilter = commerceFilter?.value || 'all';
-    viewContainer.innerHTML = '';
+        const categoryFilter = filterSelect?.value || 'all';
+        const restaurantFilter = commerceFilter?.value || 'all';
+        viewContainer.innerHTML = '';
 
-    let userTasks = window.allTasks.filter(t => {
-        const matchesUser = currentUser === 'all' || (t.assignee && t.assignee.includes(currentUser));
-        const matchesProject = !t.projectId;
-        const matchesCommerce = restaurantFilter === 'all' || t.commerceId === restaurantFilter;
-        const matchesArchive = showArchived ? t.status === 'Archived' : t.status !== 'Archived';
-        const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
+        let userTasks = window.allTasks.filter(t => {
+            const matchesUser = currentUser === 'all' || (t.assignee && t.assignee.includes(currentUser));
+            const matchesProject = !t.projectId;
+            const matchesCommerce = restaurantFilter === 'all' || (t.commerceId === restaurantFilter);
+            const matchesArchive = showArchived ? t.status === 'Archived' : t.status !== 'Archived';
+            const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
 
-        return matchesUser && matchesProject && matchesCommerce && matchesArchive && matchesCategory;
-    });
+            return matchesUser && matchesProject && matchesCommerce && matchesArchive && matchesCategory;
+        });
 
-    updateUserUI();
-    updateViewToggleUI();
-    updateArchiveToggleUI();
+        updateUserUI();
+        updateViewToggleUI();
+        updateArchiveToggleUI();
 
-    if (userTasks.length === 0) {
-        viewContainer.innerHTML = `<div class="p-12 text-center text-gray-500 italic">Aucune tâche trouvée.</div>`;
-        return;
-    }
+        if (userTasks.length === 0) {
+            viewContainer.innerHTML = `<div class="p-12 text-center text-gray-500 italic">Aucune tâche trouvée.</div>`;
+            return;
+        }
 
-    if (currentViewMode === 'list') {
-        renderListView(userTasks, viewContainer);
-    } else {
-        renderKanbanView(userTasks, viewContainer);
+        if (currentViewMode === 'list') {
+            renderListView(userTasks, viewContainer);
+        } else {
+            renderKanbanView(userTasks, viewContainer);
+        }
+    } catch (e) {
+        console.error('Render error:', e);
+        if (viewContainer) viewContainer.innerHTML = `<div class="p-8 text-center text-red-500">Erreur d'affichage : ${e.message}</div>`;
     }
 }
 

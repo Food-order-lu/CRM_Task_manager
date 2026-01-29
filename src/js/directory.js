@@ -38,35 +38,40 @@ async function fetchData() {
         allTasks = await taskRes.json();
     } catch (e) {
         console.error('Fetch error:', e);
+        if (listContainer) listContainer.innerHTML = `<div class="p-8 text-center text-red-400">Erreur réseau : ${e.message}</div>`;
     }
 }
 
 function renderList(search = '') {
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
-    const filtered = allCommerces.filter(c =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        (c.contact && c.contact.toLowerCase().includes(search.toLowerCase()))
-    );
+    try {
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
+        const filtered = allCommerces.filter(c =>
+            c.name.toLowerCase().includes(search.toLowerCase()) ||
+            (c.contact && c.contact.toLowerCase().includes(search.toLowerCase()))
+        );
 
-    if (filtered.length === 0) {
-        listContainer.innerHTML = '<div class="p-8 text-center text-gray-500">Aucun résultat</div>';
-        return;
+        if (filtered.length === 0) {
+            listContainer.innerHTML = '<div class="p-8 text-center text-gray-500">Aucun résultat</div>';
+            return;
+        }
+
+        filtered.forEach(c => {
+            const item = document.createElement('div');
+            item.className = `p-4 cursor-pointer transition-all border-l-4 ${selectedCommerceId === c.id ? 'bg-blue-500/10 border-blue-500' : 'border-transparent hover:bg-white/5'}`;
+            item.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-white">${c.name}</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(c.status)}">${c.status}</span>
+                </div>
+                <div class="text-xs text-gray-500 truncate">${c.contact || 'Pas de contact'}</div>
+            `;
+            item.onclick = () => selectCommerce(c.id);
+            listContainer.appendChild(item);
+        });
+    } catch (e) {
+        console.error('RenderList error:', e);
     }
-
-    filtered.forEach(c => {
-        const item = document.createElement('div');
-        item.className = `p-4 cursor-pointer transition-all border-l-4 ${selectedCommerceId === c.id ? 'bg-blue-500/10 border-blue-500' : 'border-transparent hover:bg-white/5'}`;
-        item.innerHTML = `
-            <div class="flex justify-between items-start mb-1">
-                <span class="font-bold text-white">${c.name}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(c.status)}">${c.status}</span>
-            </div>
-            <div class="text-xs text-gray-500 truncate">${c.contact || 'Pas de contact'}</div>
-        `;
-        item.onclick = () => selectCommerce(c.id);
-        listContainer.appendChild(item);
-    });
 }
 
 function selectCommerce(id) {
@@ -92,46 +97,50 @@ window.backToList = function () {
 }
 
 function renderDetail() {
-    const commerce = allCommerces.find(c => c.id === selectedCommerceId);
-    if (!commerce || !detailContainer) return;
+    try {
+        const commerce = allCommerces.find(c => c.id === selectedCommerceId);
+        if (!commerce || !detailContainer) return;
 
-    detailEmpty?.classList.add('hidden');
-    detailContainer.classList.remove('hidden');
+        detailEmpty?.classList.add('hidden');
+        detailContainer.classList.remove('hidden');
 
-    const nameEl = document.getElementById('detail-name');
-    const contactEl = document.getElementById('detail-contact');
-    const statusPill = document.getElementById('detail-status-pill');
+        const nameEl = document.getElementById('detail-name');
+        const contactEl = document.getElementById('detail-contact');
+        const statusPill = document.getElementById('detail-status-pill');
 
-    if (nameEl) nameEl.innerText = commerce.name;
-    if (contactEl) contactEl.innerText = `Contact: ${commerce.contact || '-'} | Email: ${commerce.email || '-'} | Tel: ${commerce.phone || '-'}`;
+        if (nameEl) nameEl.innerText = commerce.name;
+        if (contactEl) contactEl.innerText = `Contact: ${commerce.contact || '-'} | Email: ${commerce.email || '-'} | Tel: ${commerce.phone || '-'}`;
 
-    if (statusPill) {
-        statusPill.innerText = commerce.status;
-        statusPill.className = `text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getStatusColor(commerce.status)}`;
+        if (statusPill) {
+            statusPill.innerText = commerce.status;
+            statusPill.className = `text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getStatusColor(commerce.status)}`;
+        }
+
+        const commerceTasks = allTasks.filter(t => t.commerceId === commerce.id);
+
+        const active = commerceTasks.filter(t => t.status !== 'Done' && t.status !== 'Archived');
+        const history = commerceTasks.filter(t => t.status === 'Done' || t.status === 'Archived');
+
+        const activeContainer = document.getElementById('detail-active-tasks');
+        const historyContainer = document.getElementById('detail-history-tasks');
+
+        if (activeContainer) {
+            activeContainer.innerHTML = active.length
+                ? active.map(t => createTaskItem(t)).join('')
+                : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Aucune tâche en cours</div>';
+        }
+
+        if (historyContainer) {
+            historyContainer.innerHTML = history.length
+                ? history.map(t => createTaskItem(t)).join('')
+                : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Historique vide</div>';
+        }
+
+        const exportBtn = document.getElementById('btn-export-pdf');
+        if (exportBtn) exportBtn.onclick = () => exportToPDF(commerce, active, history);
+    } catch (e) {
+        console.error('RenderDetail error:', e);
     }
-
-    const commerceTasks = allTasks.filter(t => t.commerceId === commerce.id);
-
-    const active = commerceTasks.filter(t => t.status !== 'Done' && t.status !== 'Archived');
-    const history = commerceTasks.filter(t => t.status === 'Done' || t.status === 'Archived');
-
-    const activeContainer = document.getElementById('detail-active-tasks');
-    const historyContainer = document.getElementById('detail-history-tasks');
-
-    if (activeContainer) {
-        activeContainer.innerHTML = active.length
-            ? active.map(t => createTaskItem(t)).join('')
-            : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Aucune tâche en cours</div>';
-    }
-
-    if (historyContainer) {
-        historyContainer.innerHTML = history.length
-            ? history.map(t => createTaskItem(t)).join('')
-            : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Historique vide</div>';
-    }
-
-    const exportBtn = document.getElementById('btn-export-pdf');
-    if (exportBtn) exportBtn.onclick = () => exportToPDF(commerce, active, history);
 }
 
 function createTaskItem(t) {
