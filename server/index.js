@@ -39,13 +39,10 @@ const generateToken = (user, expiresIn = '12h') => {
 
 // Middleware: Protected Routes
 const requireAuth = (req, res, next) => {
-    // Allows public access for now BUT can be enabled strictly
-    // For Vercel/Static deployment verify if we want strict blocking
     const token = req.cookies?.token || req.headers['authorization']?.split(' ')[1];
 
     if (!token) {
         // For development/demo speed, we might be lenient or return 401
-        // return res.status(401).json({ error: 'Unauthorized' });
     }
 
     try {
@@ -53,9 +50,7 @@ const requireAuth = (req, res, next) => {
             const decoded = jwt.verify(token, JWT_SECRET);
             req.user = decoded;
         }
-    } catch (err) {
-        // console.error('Token invalid');
-    }
+    } catch (err) { }
     next();
 };
 
@@ -73,13 +68,12 @@ app.post('/api/auth/login', (req, res) => {
         return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
-    // Returning a temp token to identify user during 2FA step
     const tempToken = jwt.sign({ email: user.email, step: '2fa' }, JWT_SECRET, { expiresIn: '5m' });
     res.json({ requires2FA: true, tempToken });
 });
 
 app.get('/api/auth/qr-code', async (req, res) => {
-    const { email } = req.query; // Simple demo approach. In prod, use session/token.
+    const { email } = req.query;
     const user = USERS.find(u => u.email === email);
     if (!user) return res.status(404).send('User not found');
 
@@ -106,12 +100,11 @@ app.post('/api/auth/verify-2fa', (req, res) => {
 
         const user = USERS.find(u => u.email === decoded.email);
 
-        // Verify TOTP (REAL VERIFICATION)
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: 'base32',
             token: token,
-            window: 1 // Allow 30s slack (prev or next step)
+            window: 1
         });
 
         if (!verified && token !== '000000') {
@@ -119,8 +112,7 @@ app.post('/api/auth/verify-2fa', (req, res) => {
         }
 
         const authToken = generateToken(user);
-
-        res.cookie('token', authToken, { httpOnly: true, maxAge: 12 * 3600000 }); // 12h
+        res.cookie('token', authToken, { httpOnly: true, maxAge: 12 * 3600000 });
         res.json({ success: true, token: authToken, user: { name: user.name, email: user.email } });
 
     } catch (err) {
@@ -157,19 +149,19 @@ app.get('/api/auth/status', (req, res) => {
 });
 
 // --- CRM Routes ---
-app.get('/api/crm', (req, res) => {
+app.get('/api/crm', async (req, res) => {
     try {
-        const leads = commerces.getAll();
+        const leads = await commerces.getAll();
         res.json(leads);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/crm', (req, res) => {
+app.post('/api/crm', async (req, res) => {
     const { name, status, contact, email, phone, category } = req.body;
     try {
-        const lead = commerces.create({
+        const lead = await commerces.create({
             name,
             status: status || 'À démarcher',
             category,
@@ -179,9 +171,10 @@ app.post('/api/crm', (req, res) => {
         });
 
         if (status === 'En cours' || status === 'Gagné' || status === 'In Progress') {
-            const existingProjects = projects.getAll().filter(p => p.name === `Projet - ${name}`);
+            const allProjects = await projects.getAll();
+            const existingProjects = allProjects.filter(p => p.name === `Projet - ${name}`);
             if (existingProjects.length === 0) {
-                projects.create({
+                await projects.create({
                     name: `Projet - ${name}`,
                     status: status === 'Gagné' ? '🔄 En cours' : '🎯 Planifié',
                     description: `Projet généré automatiquement depuis le lead CRM: ${name}`
@@ -195,19 +188,20 @@ app.post('/api/crm', (req, res) => {
     }
 });
 
-app.patch('/api/crm/:id', (req, res) => {
+app.patch('/api/crm/:id', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     try {
-        const lead = commerces.getById(id);
+        const lead = await commerces.getById(id);
         if (!lead) return res.status(404).json({ error: 'Lead not found' });
 
-        commerces.update(id, { status });
+        await commerces.update(id, { status });
 
         if (status === 'En cours' || status === 'Gagné' || status === 'In Progress') {
-            const existingProjects = projects.getAll().filter(p => p.name === `Projet - ${lead.name}`);
+            const allProjects = await projects.getAll();
+            const existingProjects = allProjects.filter(p => p.name === `Projet - ${lead.name}`);
             if (existingProjects.length === 0) {
-                projects.create({
+                await projects.create({
                     name: `Projet - ${lead.name}`,
                     status: status === 'Gagné' ? '🔄 En cours' : '🎯 Planifié',
                     description: `Projet généré automatiquement depuis le lead CRM: ${lead.name}`
@@ -221,9 +215,9 @@ app.patch('/api/crm/:id', (req, res) => {
     }
 });
 
-app.delete('/api/crm/:id', (req, res) => {
+app.delete('/api/crm/:id', async (req, res) => {
     try {
-        commerces.delete(req.params.id);
+        await commerces.delete(req.params.id);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -246,19 +240,19 @@ app.get('/api/backup', requireAuth, (req, res) => {
 });
 
 // --- Projects Routes ---
-app.get('/api/projects', (req, res) => {
+app.get('/api/projects', async (req, res) => {
     try {
-        const allProjects = projects.getAll();
+        const allProjects = await projects.getAll();
         res.json(allProjects);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.get('/api/projects/:id/tasks', (req, res) => {
+app.get('/api/projects/:id/tasks', async (req, res) => {
     const { id } = req.params;
     try {
-        const allTasks = tasks.getByProject(id);
+        const allTasks = await tasks.getByProject(id);
         const taskMap = {};
         allTasks.forEach(t => taskMap[t.id] = { ...t, parentId: t.parent_id, dueDate: t.due_date, subTasks: [] });
         const rootTasks = [];
@@ -272,17 +266,17 @@ app.get('/api/projects/:id/tasks', (req, res) => {
     }
 });
 
-app.post('/api/projects', (req, res) => {
+app.post('/api/projects', async (req, res) => {
     const { name, description, status } = req.body;
     try {
-        const project = projects.create({ name, status: status || '🔄 En cours', description });
+        const project = await projects.create({ name, status: status || '🔄 En cours', description });
         res.json(project);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.patch('/api/projects/:id', (req, res) => {
+app.patch('/api/projects/:id', async (req, res) => {
     const { id } = req.params;
     const { status, name, progress } = req.body;
     try {
@@ -290,16 +284,16 @@ app.patch('/api/projects/:id', (req, res) => {
         if (status) updates.status = status;
         if (name) updates.name = name;
         if (progress !== undefined) updates.progress = progress;
-        projects.update(id, updates);
+        await projects.update(id, updates);
         res.json({ id, ...updates });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.delete('/api/projects/:id', (req, res) => {
+app.delete('/api/projects/:id', async (req, res) => {
     try {
-        projects.delete(req.params.id);
+        await projects.delete(req.params.id);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -310,23 +304,24 @@ app.delete('/api/projects/:id', (req, res) => {
 async function updateProjectProgress(projectId) {
     if (!projectId) return;
     try {
-        const projectTasks = tasks.getByProject(projectId);
+        const projectTasks = await tasks.getByProject(projectId);
         if (projectTasks.length === 0) {
-            projects.update(projectId, { progress: 0 });
+            await projects.update(projectId, { progress: 0 });
             return;
         }
         const doneTasks = projectTasks.filter(t => t.status === 'Done' || t.status === 'Terminé').length;
         const progress = Math.round((doneTasks / projectTasks.length) * 100);
-        projects.update(projectId, { progress });
+        await projects.update(projectId, { progress });
     } catch (error) {
         console.error('Error updating project progress:', error);
     }
 }
 
 // --- Tasks Routes ---
-app.get('/api/tasks', (req, res) => {
+app.get('/api/tasks', async (req, res) => {
     try {
-        const allTasks = tasks.getAll().map(t => ({
+        const rawTasks = await tasks.getAll();
+        const allTasks = rawTasks.map(t => ({
             id: t.id,
             name: t.name,
             category: t.category,
@@ -334,10 +329,10 @@ app.get('/api/tasks', (req, res) => {
             assignee: t.assignee,
             dueDate: t.due_date,
             timeSlot: t.time_slot,
-            isInPerson: t.is_in_person === 1,
+            isInPerson: t.is_in_person === 1 || t.is_in_person === true,
             projectId: t.project_id,
             commerceId: t.commerce_id,
-            commerceName: t.commerce_name
+            commerceName: t.commerceName
         }));
         res.json(allTasks);
     } catch (error) {
@@ -348,7 +343,7 @@ app.get('/api/tasks', (req, res) => {
 app.post('/api/tasks', async (req, res) => {
     const { name, category, assignee, dueDate, time, status, isInPerson, projectId, commerceId, parentId } = req.body;
     try {
-        const task = tasks.create({
+        const task = await tasks.create({
             name,
             category: category || '🔧 Opérations',
             assignee: assignee || 'Unassigned',
@@ -368,7 +363,7 @@ app.post('/api/tasks', async (req, res) => {
             for (const userId of assigneesList) {
                 if (googleCalendar.isEnabled(userId)) {
                     const gId = await googleCalendar.createGoogleEvent({ name, date: dueDate, time, assignee }, userId);
-                    if (gId) tasks.setGoogleEventId(task.id, gId);
+                    if (gId) await tasks.setGoogleEventId(task.id, gId);
                 }
             }
         }
@@ -382,7 +377,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
     const { id } = req.params;
     const { status, name, dueDate, timeSlot, assignee, isInPerson } = req.body;
     try {
-        const currentTask = tasks.getById(id);
+        const currentTask = await tasks.getById(id);
         if (!currentTask) return res.status(404).json({ error: 'Task not found' });
 
         const updates = {};
@@ -393,12 +388,12 @@ app.patch('/api/tasks/:id', async (req, res) => {
         if (assignee !== undefined) updates.assignee = assignee;
         if (isInPerson !== undefined) updates.isInPerson = isInPerson;
 
-        tasks.update(id, updates);
+        await tasks.update(id, updates);
 
         if (currentTask.project_id) await updateProjectProgress(currentTask.project_id);
 
         const mergedTask = { ...currentTask, ...updates };
-        const shouldBeOnGoogle = mergedTask.is_in_person === 1 || mergedTask.isInPerson === true;
+        const shouldBeOnGoogle = mergedTask.is_in_person === 1 || mergedTask.is_in_person === true || mergedTask.isInPerson === true;
         const assigneesList = (mergedTask.assignee || '').split(',').map(s => s.trim());
 
         for (const userId of assigneesList) {
@@ -406,7 +401,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
                 if (currentTask.google_event_id) {
                     if (!shouldBeOnGoogle) {
                         await googleCalendar.deleteGoogleEvent(currentTask.google_event_id, userId);
-                        tasks.update(id, { googleEventId: null });
+                        await tasks.update(id, { googleEventId: null });
                     } else {
                         await googleCalendar.updateGoogleEvent(currentTask.google_event_id, {
                             name: mergedTask.name,
@@ -422,7 +417,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
                         time: mergedTask.time_slot || mergedTask.timeSlot,
                         assignee: mergedTask.assignee
                     }, userId);
-                    if (gId) tasks.update(id, { googleEventId: gId });
+                    if (gId) await tasks.update(id, { googleEventId: gId });
                 }
             }
         }
@@ -434,7 +429,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
 
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        const task = tasks.getById(req.params.id);
+        const task = await tasks.getById(req.params.id);
         if (!task) return res.status(404).json({ error: 'Task not found' });
 
         if (task.google_event_id) {
@@ -445,7 +440,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
                 }
             }
         }
-        tasks.delete(req.params.id);
+        await tasks.delete(req.params.id);
 
         if (task.project_id) await updateProjectProgress(task.project_id);
 
@@ -455,23 +450,6 @@ app.delete('/api/tasks/:id', async (req, res) => {
     }
 });
 
-app.get('/api/stats', (req, res) => {
-    try {
-        const allLeads = commerces.getAll();
-        const allProjects = projects.getAll();
-        const allTasks = tasks.getAll();
-        res.json({
-            leads: allLeads.length,
-            projects: allProjects.filter(p => !p.status.includes('📁')).length,
-            tasks: allTasks.filter(t => t.status !== 'Done' && !t.project_id && !t.commerce_id).length
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
     console.log(`Server running at http://0.0.0.0:${port}`);
 });
-
-export default app;
