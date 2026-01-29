@@ -207,12 +207,18 @@ initSidebar();
 
 // Modal Management
 window.openModal = function () {
-    document.getElementById('modal-overlay').classList.remove('hidden');
+    const modal = document.getElementById('modal-overlay');
+    modal?.classList.add('active');
+    setTimeout(() => {
+        const input = document.getElementById('lead-form')?.querySelector('input[name="name"]');
+        if (input) input.focus();
+    }, 100);
 }
 
 window.closeModal = function () {
-    document.getElementById('modal-overlay').classList.add('hidden');
-    document.getElementById('lead-form').reset();
+    const modal = document.getElementById('modal-overlay');
+    modal?.classList.remove('active');
+    document.getElementById('lead-form')?.reset();
 }
 
 // Close modal on overlay click

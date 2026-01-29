@@ -75,23 +75,25 @@ export async function fetchTasks() {
 const modal = document.getElementById('modal-overlay');
 const btnOpen = document.getElementById('btn-open-lead-modal');
 const btnClose = document.getElementById('btn-close-lead-modal');
+const btnCancel = document.getElementById('btn-cancel-lead-modal');
 const leadForm = document.getElementById('lead-form');
 
 function openModal() {
-    modal.classList.remove('hidden');
+    modal?.classList.add('active');
     setTimeout(() => {
-        const input = leadForm.querySelector('input[name="name"]');
+        const input = leadForm?.querySelector('input[name="name"]');
         if (input) input.focus();
     }, 100);
 }
 
 function closeModal() {
-    modal.classList.add('hidden');
-    leadForm.reset();
+    modal?.classList.remove('active');
+    leadForm?.reset();
 }
 
 btnOpen?.addEventListener('click', openModal);
 btnClose?.addEventListener('click', closeModal);
+btnCancel?.addEventListener('click', closeModal);
 
 modal?.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();

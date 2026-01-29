@@ -161,8 +161,11 @@ function openModal() {
     document.body.style.overflow = 'hidden';
     // Set default date to today
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('visit-date').value = today;
-    setTimeout(() => document.getElementById('visit-name').focus(), 100);
+    const dateInput = visitForm.querySelector('[name="date"]');
+    if (dateInput) dateInput.value = today;
+
+    const nameInput = visitForm.querySelector('[name="name"]');
+    if (nameInput) setTimeout(() => nameInput.focus(), 100);
 }
 
 function closeModal() {
@@ -194,7 +197,7 @@ visitForm?.addEventListener('submit', async (e) => {
 
     // Get selected calendars (multi-select)
     const selectedCalendars = Array.from(
-        document.querySelectorAll('input[name="calendars"]:checked')
+        visitForm.querySelectorAll('input[name="calendars"]:checked')
     ).map(cb => cb.value);
 
     const visitData = {
@@ -233,30 +236,18 @@ visitForm?.addEventListener('submit', async (e) => {
 // User Switching Logic
 window.switchUser = (user) => {
     currentUser = user;
-    updateSidebarUser(user);
+    if (typeof updateSidebarUser === 'function') updateSidebarUser(user);
     initVisits();
 };
 
 function updateUI() {
     // Update User Buttons
-    document.getElementById('user-tiago').className = `user-switch px-3 py-1 text-sm rounded-md transition-all font-medium ${currentUser === 'Tiago' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'}`;
-    document.getElementById('user-dani').className = `user-switch px-3 py-1 text-sm rounded-md transition-all font-medium ${currentUser === 'Dani' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white'}`;
+    const btnTiago = document.getElementById('user-tiago');
+    const btnDani = document.getElementById('user-dani');
 
-    // Update Filter Buttons
-    document.getElementById('view-mine').className = `view-filter px-3 py-1.5 text-sm rounded-md transition-all font-medium ${currentView === 'mine' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`;
-    document.getElementById('view-all').className = `view-filter px-3 py-1.5 text-sm rounded-md transition-all font-medium ${currentView === 'all' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`;
+    if (btnTiago) btnTiago.className = `user-switch px-3 py-1 text-sm rounded-md transition-all font-medium ${currentUser === 'Tiago' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'}`;
+    if (btnDani) btnDani.className = `user-switch px-3 py-1 text-sm rounded-md transition-all font-medium ${currentUser === 'Dani' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white'}`;
 }
-
-// View Switching Logic
-document.getElementById('view-mine')?.addEventListener('click', () => {
-    currentView = 'mine';
-    initVisits();
-});
-
-document.getElementById('view-all')?.addEventListener('click', () => {
-    currentView = 'all';
-    initVisits();
-});
 
 // Initialize everything
 async function init() {
@@ -265,4 +256,5 @@ async function init() {
 }
 
 init();
+
 

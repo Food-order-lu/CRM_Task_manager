@@ -6,235 +6,156 @@
         if (!localStorage.getItem('authToken')) window.location.href = '/';
     </script>
     <meta charset="UTF-8">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rivego CRM Manager</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <title>Visites | Rivego CRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/src/style.css" rel="stylesheet">
 </head>
 
-<body class="bg-liv-dark text-white h-screen flex overflow-hidden">
+<body class="bg-liv-dark text-white h-screen flex flex-col lg:flex-row overflow-hidden">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header lg:hidden">
+        <button onclick="toggleMobileMenu()" class="p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Rivego
+        </h1>
+        <div class="w-10"></div>
+    </div>
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-liv-card border-r border-white/5 flex flex-col">
-        <div class="p-6">
+    <aside id="sidebar" class="sidebar w-64 bg-liv-card border-r border-white/5 flex flex-col h-full lg:static">
+        <div class="p-6 hidden lg:block">
             <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
-                Rivego CRM Manager</h1>
+                Rivego CRM</h1>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2">
+        <nav class="flex-1 px-4 space-y-2 mt-4 lg:mt-0">
             <a href="/dashboard.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📊</span>
-                <span class="font-medium">Dashboard</span>
+                <span>📊</span><span class="font-medium">Dashboard</span>
             </a>
             <a href="/crm.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>🏪</span>
-                <span class="font-medium">Commerces</span>
+                <span>🏪</span><span class="font-medium">Commerces</span>
             </a>
             <a href="/projects.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📁</span>
-                <span class="font-medium">Projets</span>
+                <span>📁</span><span class="font-medium">Projets</span>
             </a>
             <a href="/tasks.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>✅</span>
-                <span class="font-medium">Tâches</span>
-            </a>
-            <a href="/directory.html"
-                class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📖</span>
-                <span class="font-medium">Clients / Projets</span>
+                <span>✅</span><span class="font-medium">Tâches</span>
             </a>
             <a href="/visits.html"
-                class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
-                <span>📅</span>
-                <span class="font-medium">Visites</span>
+                class="nav-item-active flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
+                <span>📅</span><span class="font-medium">Visites</span>
             </a>
         </nav>
 
-        <!-- Config Section -->
-        <div class="p-4 border-t border-white/5 space-y-4">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
-            <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-gray-400">Google Calendar</span>
-                    <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
-                </div>
-                <button id="btn-google-auth"
-                    class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="currentColor"
-                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-                    </svg>
-                    <span>Se connecter</span>
-                </button>
-            </div>
+        <div class="p-4 border-t border-white/5">
+            <button id="logout-btn"
+                class="w-full px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-all text-center">Logout</button>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-auto p-8">
+    <main class="flex-1 overflow-auto p-4 md:p-8">
         <header
-            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0 text-white">
             <div>
                 <h2 class="text-3xl font-bold">Agenda Visites</h2>
-                <div class="flex items-center space-x-4 mt-2">
-                    <!-- User Selector -->
-                    <div class="flex items-center space-x-2 bg-white/5 rounded-lg p-1 border border-white/10">
+                <div class="flex items-center space-x-2 mt-2">
+                    <div class="flex items-center bg-white/5 rounded-lg p-1 border border-white/10">
                         <button id="user-tiago"
-                            class="user-switch px-3 py-1 text-sm rounded-md transition-all bg-blue-500 text-white font-medium"
-                            onclick="switchUser('Tiago')">
-                            Tiago
-                        </button>
-
+                            class="user-switch px-3 py-1 text-sm rounded-md transition-all font-medium"
+                            onclick="switchUser('Tiago')">Tiago</button>
                         <button id="user-dani"
-                            class="user-switch px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white transition-all"
-                            onclick="switchUser('Dani')">
-                            Dani
-                        </button>
+                            class="user-switch px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white transition-all font-medium"
+                            onclick="switchUser('Dani')">Dani</button>
                     </div>
                 </div>
             </div>
-
-            <div class="flex items-center space-x-4">
-                <!-- View Filter -->
-                <div class="flex bg-white/5 rounded-lg p-1 border border-white/10">
-                    <button id="view-mine"
-                        class="view-filter px-3 py-1.5 text-sm rounded-md transition-all bg-white/10 text-white font-medium">
-                        Mes Visites
-                    </button>
-                    <button id="view-all"
-                        class="view-filter px-3 py-1.5 text-sm rounded-md text-gray-400 hover:text-white transition-all">
-                        Tout voir
-                    </button>
-                </div>
-
-                <button class="btn-primary" id="btn-new-visit">
-                    + Nouvelle Visite
-                </button>
-            </div>
+            <button class="btn-primary" id="btn-new-visit">+ Nouvelle Visite</button>
         </header>
 
-        <!-- Calendar / List View -->
+        <!-- Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- List of upcoming -->
-            <div class="glass-card p-6">
+            <!-- List -->
+            <div class="bg-liv-card p-6 rounded-2xl border border-white/10">
                 <h3 class="text-xl font-bold mb-4">📅 Prochainement</h3>
                 <div id="visits-container" class="space-y-4">
-                    <!-- Visits injected via JS -->
+                    <div class="p-4 text-center text-gray-500">Chargement...</div>
                 </div>
             </div>
 
-            <!-- Calendrier Interactif -->
-            <div class="glass-card p-6 flex flex-col h-[600px]">
-                <h3 class="text-xl font-bold mb-4">📅 Calendrier des Visites</h3>
+            <!-- Calendrier -->
+            <div class="bg-liv-card p-6 rounded-2xl border border-white/10 flex flex-col h-[500px]">
+                <h3 class="text-xl font-bold mb-4">📅 Calendrier</h3>
                 <div id="calendar" class="flex-1 overflow-hidden"></div>
             </div>
-
         </div>
     </main>
 
-    <!-- Modal Création Visite -->
+    <!-- Modal Visite -->
     <div id="visit-modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h3
-                    class="text-xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
-                    Nouvelle Visite
-                </h3>
-                <button id="close-visit-modal" class="btn-icon text-gray-400 hover:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                        stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <div class="flex justify-between items-center mb-6 px-6 pt-6">
+                <h3 class="text-xl font-bold">Nouvelle Visite</h3>
+                <button id="close-visit-modal" class="text-gray-400 hover:text-white">✕</button>
             </div>
-
-            <form id="visit-form" class="space-y-5">
-                <!-- Titre de la visite -->
+            <form id="visit-form" class="space-y-4 p-6 pt-0">
                 <div>
-                    <label for="visit-name" class="form-label">Titre de la visite *</label>
-                    <input type="text" id="visit-name" name="name" class="form-input"
-                        placeholder="Ex: Rendez-vous Restaurant Le Gourmet" required>
+                    <label class="form-label">Titre *</label>
+                    <input type="text" name="name" class="form-input" required>
                 </div>
-
-                <!-- Date et Heure -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="visit-date" class="form-label">Date *</label>
-                        <input type="date" id="visit-date" name="date" class="form-input" required>
+                        <label class="form-label">Date *</label>
+                        <input type="date" name="date" class="form-input" required>
                     </div>
                     <div>
-                        <label for="visit-time" class="form-label">Heure</label>
-                        <input type="time" id="visit-time" name="time" class="form-input">
+                        <label class="form-label">Heure</label>
+                        <input type="time" name="time" class="form-input">
                     </div>
                 </div>
-
-                <!-- Assigné à (Calendrier) -->
                 <div>
-                    <label for="visit-assignee" class="form-label">Assigné à (Calendrier)</label>
-                    <div class="space-y-2">
-                        <label
-                            class="flex items-center space-x-3 p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
-                            <input type="checkbox" name="calendars" value="Tiago"
-                                class="w-4 h-4 rounded border-gray-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 bg-white/10">
-                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-                            <span class="text-sm">Tiago</span>
-                        </label>
-                        <label
-                            class="flex items-center space-x-3 p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
-                            <input type="checkbox" name="calendars" value="Dani"
-                                class="w-4 h-4 rounded border-gray-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 bg-white/10">
-                            <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                            <span class="text-sm">Dani</span>
-                        </label>
+                    <label class="form-label">Assigné à</label>
+                    <div class="flex space-x-4 pt-2">
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="calendars" value="Tiago"
+                                checked> <span>Tiago</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" name="calendars" value="Dani">
+                            <span>Dani</span></label>
                     </div>
                 </div>
-
-                <!-- Catégorie -->
-                <div>
-                    <label for="visit-category" class="form-label">Catégorie</label>
-                    <select id="visit-category" name="category" class="form-input">
-                        <option value="🍴 Restaurants">🍴 Restaurants</option>
-                        <option value="💼 Commercial">💼 Commercial</option>
-                        <option value="🔧 Opérations">🔧 Opérations</option>
-                        <option value="📋 Projets">📋 Projets</option>
-                    </select>
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label for="visit-notes" class="form-label">Notes</label>
-                    <textarea id="visit-notes" name="notes" class="form-input" rows="2"
-                        placeholder="Informations supplémentaires..."></textarea>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-white/10">
-                    <button type="button" id="cancel-visit-modal" class="btn-secondary">
-                        Annuler
-                    </button>
-                    <button type="submit" class="btn-primary">
-                        <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                stroke="currentColor" class="w-4 h-4 mr-2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                            Planifier la visite
-                        </span>
-                    </button>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancel-visit-modal" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary">Planifier</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script type="module" src="./src/js/visits.js"></script>
+    <script>
+        window.toggleMobileMenu = function () {
+            document.getElementById('sidebar').classList.toggle('mobile-active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+    </script>
 </body>
 
 </html>

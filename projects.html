@@ -6,211 +6,155 @@
         if (!localStorage.getItem('authToken')) window.location.href = '/';
     </script>
     <meta charset="UTF-8">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projets Clients - Rivego CRM Manager</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <title>Projets | Rivego CRM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/src/style.css" rel="stylesheet">
 </head>
 
-<body class="bg-liv-dark text-white h-screen flex overflow-hidden">
+<body class="bg-liv-dark text-white h-screen flex flex-col lg:flex-row overflow-hidden">
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header lg:hidden">
+        <button onclick="toggleMobileMenu()" class="p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        </button>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Rivego
+        </h1>
+        <div class="w-10"></div>
+    </div>
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-liv-card border-r border-white/5 flex flex-col">
-        <div class="p-6">
+    <aside id="sidebar" class="sidebar w-64 bg-liv-card border-r border-white/5 flex flex-col h-full lg:static">
+        <div class="p-6 hidden lg:block">
             <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
-                Rivego CRM Manager</h1>
+                Rivego CRM</h1>
         </div>
 
-        <nav class="flex-1 px-4 space-y-2">
+        <nav class="flex-1 px-4 space-y-2 mt-4 lg:mt-0">
             <a href="/dashboard.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📊</span>
-                <span class="font-medium">Dashboard</span>
+                <span>📊</span><span class="font-medium">Dashboard</span>
             </a>
             <a href="/crm.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>🏪</span>
-                <span class="font-medium">CRM Clients</span>
+                <span>🏪</span><span class="font-medium">Commerces</span>
             </a>
             <a href="/projects.html"
-                class="flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
-                <span>📁</span>
-                <span class="font-medium">Projets</span>
+                class="nav-item-active flex items-center space-x-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg">
+                <span>📁</span><span class="font-medium">Projets</span>
             </a>
             <a href="/tasks.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>✅</span>
-                <span class="font-medium">Tâches</span>
+                <span>✅</span><span class="font-medium">Tâches</span>
             </a>
             <a href="/visits.html"
                 class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📅</span>
-                <span class="font-medium">Visites</span>
-            </a>
-            <a href="/directory.html"
-                class="flex items-center space-x-3 px-4 py-3 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-all">
-                <span>📖</span>
-                <span class="font-medium">Clients / Projets</span>
+                <span>📅</span><span class="font-medium">Visites</span>
             </a>
         </nav>
 
-        <!-- Config Section -->
-        <div class="p-4 border-t border-white/5 space-y-4">
-            <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider px-4">Configuration</h4>
-            <div id="google-status-card" class="bg-white/5 rounded-xl p-4 border border-white/5 mx-2">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-gray-400">Google Calendar</span>
-                    <span id="google-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
-                </div>
-                <button id="btn-google-auth"
-                    class="w-full py-2 text-xs font-bold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all flex items-center justify-center space-x-2">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="currentColor"
-                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12 s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-                    </svg>
-                    <span>Se connecter</span>
-                </button>
-            </div>
+        <div class="p-4 border-t border-white/5">
+            <button id="logout-btn"
+                class="w-full px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-all text-center">Logout</button>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-auto p-8">
-        <header class="flex justify-between items-center mb-6">
+    <main class="flex-1 overflow-auto p-4 md:p-8">
+        <header
+            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0 text-white">
             <div>
-                <h2 class="text-3xl font-bold">Répertoire Projets</h2>
-                <p class="text-gray-400 mt-1">Suivi de l'avancement des déploiements clients.</p>
+                <h2 class="text-3xl font-bold">Projets Clients</h2>
+                <p class="text-gray-400">Suivi du déploiement</p>
             </div>
-            <button class="btn-primary" id="btn-new-project">
-                + Nouveau Projet
-            </button>
+            <button class="btn-primary" id="btn-new-project">+ Nouveau Projet</button>
         </header>
 
-        <!-- Status Tabs -->
-        <div class="flex items-center space-x-2 mb-8 bg-white/5 p-1 rounded-xl border border-white/5 w-fit">
-            <button onclick="filterByStatus('all')" id="filter-all"
+        <!-- Tabs -->
+        <div
+            class="flex items-center space-x-2 mb-8 bg-white/5 p-1 rounded-xl border border-white/5 w-fit overflow-x-auto whitespace-nowrap">
+            <button onclick="window.filterByStatus('all')" id="filter-all"
                 class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all bg-blue-500 text-white">Tous</button>
-            <button onclick="filterByStatus('🎯 Planifié')" id="filter-planned"
-                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">🎯
-                Planifié</button>
-            <button onclick="filterByStatus('🔄 En cours')" id="filter-progress"
-                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">🔄
-                En cours</button>
-            <button onclick="filterByStatus('✅ Terminé')" id="filter-done"
-                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">✅
-                Terminé</button>
-            <button onclick="filterByStatus('📁 Archivé')" id="filter-archived"
-                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">📁
-                Archivé</button>
+            <button onclick="window.filterByStatus('🎯 Planifié')" id="filter-planned"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">Planifié</button>
+            <button onclick="window.filterByStatus('🔄 En cours')" id="filter-progress"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">En
+                cours</button>
+            <button onclick="window.filterByStatus('✅ Terminé')" id="filter-done"
+                class="project-tab px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">Terminé</button>
         </div>
 
-        <!-- Projects Grid -->
         <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Loading state -->
-            <div class="glass-card p-6 animate-pulse">
-                <div class="h-4 bg-white/10 rounded w-3/4 mb-4"></div>
-                <div class="h-2 bg-white/10 rounded w-full mb-2"></div>
-                <div class="h-2 bg-white/10 rounded w-5/6"></div>
-            </div>
+            <!-- Loaded by JS -->
         </div>
     </main>
 
-    <!-- Modal Création Projet -->
+    <!-- Modal Projet -->
     <div id="project-modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h3
-                    class="text-xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">
-                    Nouveau Projet
-                </h3>
-                <button id="close-project-modal" class="btn-icon text-gray-400 hover:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                        stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            <div class="flex justify-between items-center mb-6 px-6 pt-6">
+                <h3 class="text-xl font-bold">Nouveau Projet</h3>
+                <button id="close-project-modal" class="text-gray-400 hover:text-white">✕</button>
             </div>
-
-            <form id="project-form" class="space-y-5">
-                <!-- Lier à un Lead -->
+            <form id="project-form" class="space-y-4 p-6 pt-0">
                 <div>
-                    <label for="project-lead-select" class="form-label">Lier à un Lead (Restaurant)</label>
-                    <select id="project-lead-select" class="form-input text-gray-400">
-                        <option value="">Sélectionner un lead...</option>
-                        <!-- Options injected by JS -->
-                    </select>
+                    <label class="form-label">Lier à un Commerce</label>
+                    <select id="project-lead-select" class="form-input"></select>
                 </div>
-
-                <!-- Nom du projet -->
                 <div>
-                    <label for="project-name" class="form-label">Nom du projet *</label>
-                    <input type="text" id="project-name" name="name" class="form-input"
-                        placeholder="Ex: Restaurant Le Gourmet" required>
+                    <label class="form-label">Nom du projet *</label>
+                    <input type="text" name="name" class="form-input" required>
                 </div>
-
-                <!-- Description -->
                 <div>
-                    <label for="project-description" class="form-label">Description</label>
-                    <textarea id="project-description" name="description" class="form-input" rows="3"
-                        placeholder="Décrivez brièvement le projet..."></textarea>
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-input h-20"></textarea>
                 </div>
-
-                <!-- Statut -->
-                <div>
-                    <label for="project-status" class="form-label">Statut</label>
-                    <select id="project-status" name="status" class="form-input">
-                        <option value="🎯 Planifié">🎯 Planifié</option>
-                        <option value="🔄 En cours" selected>🔄 En cours</option>
-                        <option value="⏸️ En pause">⏸️ En pause</option>
-                        <option value="✅ Terminé">✅ Terminé</option>
-                    </select>
-                </div>
-
-                <!-- Priorité -->
-                <div>
-                    <label for="project-priority" class="form-label">Priorité</label>
-                    <select id="project-priority" name="priority" class="form-input">
-                        <option value="🔥 Haute">🔥 Haute</option>
-                        <option value="⚡ Moyenne" selected>⚡ Moyenne</option>
-                        <option value="🧊 Basse">🧊 Basse</option>
-                    </select>
-                </div>
-
-                <!-- Date de début -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="project-start-date" class="form-label">Date de début</label>
-                        <input type="date" id="project-start-date" name="startDate" class="form-input">
+                        <label class="form-label">Statut</label>
+                        <select name="status" class="form-input">
+                            <option value="🎯 Planifié">🎯 Planifié</option>
+                            <option value="🔄 En cours" selected>🔄 En cours</option>
+                            <option value="✅ Terminé">✅ Terminé</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="project-end-date" class="form-label">Date de fin prévue</label>
-                        <input type="date" id="project-end-date" name="endDate" class="form-input">
+                        <label class="form-label">Priorité</label>
+                        <select name="priority" class="form-input">
+                            <option value="🔥 Haute">🔥 Haute</option>
+                            <option value="⚡ Moyenne" selected>⚡ Moyenne</option>
+                            <option value="🧊 Basse">🧊 Basse</option>
+                        </select>
                     </div>
                 </div>
-
-                <!-- Actions -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-white/10">
-                    <button type="button" id="cancel-project-modal" class="btn-secondary">
-                        Annuler
-                    </button>
-                    <button type="submit" class="btn-primary">
-                        <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                stroke="currentColor" class="w-4 h-4 mr-2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                            Créer le projet
-                        </span>
-                    </button>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancel-project-modal" class="btn-secondary">Annuler</button>
+                    <button type="submit" class="btn-primary">Créer</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script type="module" src="./src/js/projects.js"></script>
+    <script>
+        window.toggleMobileMenu = function () {
+            document.getElementById('sidebar').classList.toggle('mobile-active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+    </script>
 </body>
 
 </html>

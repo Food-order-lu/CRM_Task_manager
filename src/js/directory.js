@@ -65,6 +65,22 @@ function selectCommerce(id) {
     selectedCommerceId = id;
     renderList(searchInput.value);
     renderDetail();
+
+    // On mobile, hide list and show detail
+    if (window.innerWidth < 768) {
+        detailContainer.parentElement.classList.remove('hidden');
+        listContainer.parentElement.classList.add('hidden');
+    }
+}
+
+window.backToList = function () {
+    detailContainer.classList.add('hidden');
+    detailEmpty.classList.remove('hidden');
+
+    if (window.innerWidth < 768) {
+        detailContainer.parentElement.classList.add('hidden'); // This is the main Detail Panel wrapper
+        listContainer.parentElement.classList.remove('hidden'); // This is the List Panel wrapper
+    }
 }
 
 function renderDetail() {
