@@ -1,4 +1,3 @@
-import '../style.css';
 import { API_URL } from './config.js';
 import { initSidebar } from './shared-sidebar.js';
 
@@ -6,17 +5,24 @@ let allCommerces = [];
 let allTasks = [];
 let selectedCommerceId = null;
 
-const listContainer = document.getElementById('directory-list');
-const detailContainer = document.getElementById('directory-detail');
-const detailEmpty = document.getElementById('directory-detail-empty');
-const searchInput = document.getElementById('directory-search');
+let listContainer, detailContainer, detailEmpty, searchInput;
 
 async function init() {
+    listContainer = document.getElementById('directory-list');
+    detailContainer = document.getElementById('directory-detail');
+    detailEmpty = document.getElementById('directory-detail-empty');
+    searchInput = document.getElementById('directory-search');
+
+    if (!listContainer || !detailContainer) {
+        console.error('Critical DOM elements missing');
+        return;
+    }
+
     initSidebar();
     await fetchData();
     renderList();
 
-    searchInput.addEventListener('input', (e) => {
+    searchInput?.addEventListener('input', (e) => {
         renderList(e.target.value);
     });
 }
@@ -27,6 +33,7 @@ async function fetchData() {
             fetch(`${API_URL}/crm`),
             fetch(`${API_URL}/tasks`)
         ]);
+        if (!commRes.ok || !taskRes.ok) throw new Error('Data fetch failed');
         allCommerces = await commRes.json();
         allTasks = await taskRes.json();
     } catch (e) {
@@ -35,6 +42,7 @@ async function fetchData() {
 }
 
 function renderList(search = '') {
+    if (!listContainer) return;
     listContainer.innerHTML = '';
     const filtered = allCommerces.filter(c =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -63,39 +71,44 @@ function renderList(search = '') {
 
 function selectCommerce(id) {
     selectedCommerceId = id;
-    renderList(searchInput.value);
+    renderList(searchInput?.value || '');
     renderDetail();
 
     // On mobile, hide list and show detail
     if (window.innerWidth < 768) {
-        detailContainer.parentElement.classList.remove('hidden');
-        listContainer.parentElement.classList.add('hidden');
+        if (detailContainer) detailContainer.parentElement.classList.remove('hidden');
+        if (listContainer) listContainer.parentElement.classList.add('hidden');
     }
 }
 
 window.backToList = function () {
-    detailContainer.classList.add('hidden');
-    detailEmpty.classList.remove('hidden');
+    if (detailContainer) detailContainer.classList.add('hidden');
+    if (detailEmpty) detailEmpty.classList.remove('hidden');
 
     if (window.innerWidth < 768) {
-        detailContainer.parentElement.classList.add('hidden'); // This is the main Detail Panel wrapper
-        listContainer.parentElement.classList.remove('hidden'); // This is the List Panel wrapper
+        if (detailContainer) detailContainer.parentElement.classList.add('hidden');
+        if (listContainer) listContainer.parentElement.classList.remove('hidden');
     }
 }
 
 function renderDetail() {
     const commerce = allCommerces.find(c => c.id === selectedCommerceId);
-    if (!commerce) return;
+    if (!commerce || !detailContainer) return;
 
-    detailEmpty.classList.add('hidden');
+    detailEmpty?.classList.add('hidden');
     detailContainer.classList.remove('hidden');
 
-    document.getElementById('detail-name').innerText = commerce.name;
-    document.getElementById('detail-contact').innerText = `Contact: ${commerce.contact || '-'} | Email: ${commerce.email || '-'} | Tel: ${commerce.phone || '-'}`;
-
+    const nameEl = document.getElementById('detail-name');
+    const contactEl = document.getElementById('detail-contact');
     const statusPill = document.getElementById('detail-status-pill');
-    statusPill.innerText = commerce.status;
-    statusPill.className = `text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getStatusColor(commerce.status)}`;
+
+    if (nameEl) nameEl.innerText = commerce.name;
+    if (contactEl) contactEl.innerText = `Contact: ${commerce.contact || '-'} | Email: ${commerce.email || '-'} | Tel: ${commerce.phone || '-'}`;
+
+    if (statusPill) {
+        statusPill.innerText = commerce.status;
+        statusPill.className = `text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${getStatusColor(commerce.status)}`;
+    }
 
     const commerceTasks = allTasks.filter(t => t.commerceId === commerce.id);
 
@@ -105,15 +118,20 @@ function renderDetail() {
     const activeContainer = document.getElementById('detail-active-tasks');
     const historyContainer = document.getElementById('detail-history-tasks');
 
-    activeContainer.innerHTML = active.length
-        ? active.map(t => createTaskItem(t)).join('')
-        : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Aucune tâche en cours</div>';
+    if (activeContainer) {
+        activeContainer.innerHTML = active.length
+            ? active.map(t => createTaskItem(t)).join('')
+            : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Aucune tâche en cours</div>';
+    }
 
-    historyContainer.innerHTML = history.length
-        ? history.map(t => createTaskItem(t)).join('')
-        : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Historique vide</div>';
+    if (historyContainer) {
+        historyContainer.innerHTML = history.length
+            ? history.map(t => createTaskItem(t)).join('')
+            : '<div class="p-4 bg-white/2 rounded-lg text-gray-500 text-sm italic">Historique vide</div>';
+    }
 
-    document.getElementById('btn-export-pdf').onclick = () => exportToPDF(commerce, active, history);
+    const exportBtn = document.getElementById('btn-export-pdf');
+    if (exportBtn) exportBtn.onclick = () => exportToPDF(commerce, active, history);
 }
 
 function createTaskItem(t) {
@@ -123,8 +141,8 @@ function createTaskItem(t) {
             <div>
                 <h5 class="font-medium text-sm ${isDone ? 'text-gray-500 line-through' : 'text-white'}">${t.name}</h5>
                 <div class="flex items-center space-x-2 mt-1">
-                    <span class="text-[10px] text-gray-500">${t.category}</span>
-                    <span class="text-[10px] text-blue-400">Assigné: ${t.assignee}</span>
+                    <span class="text-[10px] text-gray-500">${t.category || '-'}</span>
+                    <span class="text-[10px] text-blue-400">Assigné: ${t.assignee || '-'}</span>
                 </div>
             </div>
             <div class="text-right">
@@ -146,6 +164,7 @@ function getStatusColor(status) {
 
 function exportToPDF(commerce, active, history) {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
     const today = new Date().toLocaleDateString('fr-FR');
 
     const html = `
@@ -186,9 +205,9 @@ function exportToPDF(commerce, active, history) {
                     ${active.length ? active.map(t => `
                         <tr>
                             <td><b>${t.name}</b></td>
-                            <td>${t.category}</td>
+                            <td>${t.category || '-'}</td>
                             <td>${t.dueDate || '-'}</td>
-                            <td>${t.assignee}</td>
+                            <td>${t.assignee || '-'}</td>
                         </tr>
                     `).join('') : '<tr><td colspan="4" style="text-align: center; color: #94a3b8 italic;">Aucune tâche en cours</td></tr>'}
                 </tbody>
@@ -208,7 +227,7 @@ function exportToPDF(commerce, active, history) {
                     ${history.length ? history.map(t => `
                         <tr>
                             <td style="color: #64748b;">${t.name}</td>
-                            <td>${t.category}</td>
+                            <td>${t.category || '-'}</td>
                             <td>${t.dueDate || '-'}</td>
                             <td><span class="status">${t.status}</span></td>
                         </tr>
@@ -223,7 +242,6 @@ function exportToPDF(commerce, active, history) {
             <script>
                 window.onload = function() {
                     window.print();
-                    // window.close();
                 }
             </script>
         </body>
@@ -234,4 +252,9 @@ function exportToPDF(commerce, active, history) {
     printWindow.document.close();
 }
 
-init();
+// Global Start
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
