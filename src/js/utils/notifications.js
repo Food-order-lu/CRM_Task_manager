@@ -79,34 +79,53 @@ export const toast = {
 
         supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Listen for new tasks
+        // Shared channel for all app-wide changes
         supabase
-            .channel('tasks-channel')
+            .channel('app-notifications')
+            // 1. Tasks & Visits
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'tasks' },
                 (payload) => {
                     const newTask = payload.new;
-                    const assignees = newTask.assignee || '';
-                    const isVisit = newTask.is_in_person || newTask.isInPerson;
+                    if (!newTask) return;
+                    const assignees = (newTask.assignee || '').toLowerCase();
+                    const me = userName.toLowerCase();
+                    const isVisit = !!(newTask.is_in_person || newTask.isInPerson);
 
-                    // Case 1: Assigned to me
-                    if (assignees.includes(userName)) {
-                        this.info(
-                            'Nouvelle tâche attribuée',
-                            `Tâche: ${newTask.name}`
-                        );
-                    }
-                    // Case 2: New Visit (Notify if it's a visit, maybe for everyone)
-                    else if (isVisit) {
-                        this.info(
-                            'Nouvelle visite créée',
-                            `Client: ${newTask.name}`
-                        );
+                    if (assignees.includes(me)) {
+                        this.info('Nouvelle tâche', newTask.name);
+                    } else if (isVisit) {
+                        this.info('Nouvelle visite', newTask.name);
                     }
                 }
             )
-            .subscribe();
+            // 2. New Projects
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'projects' },
+                (payload) => {
+                    const p = payload.new;
+                    if (!p) return;
+                    this.success('Nouveau projet', p.name);
+                }
+            )
+            // 3. New Leads (Commerces)
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'commerces' },
+                (payload) => {
+                    const c = payload.new;
+                    if (!c) return;
+                    // We notify if it's a Lead
+                    if (c.status === 'Lead') {
+                        this.success('Nouveau lead', c.name);
+                    }
+                }
+            )
+            .subscribe((status) => {
+                console.log('[Realtime] Connection status:', status);
+            });
 
         console.log('Realtime notifications initialized for', userName);
     }
