@@ -35,7 +35,7 @@ async function initUserClient(userId) {
     if (userClients[userId]) return userClients[userId];
 
     const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-    const refreshToken = config.get(`GOOGLE_REFRESH_TOKEN_${userId}`);
+    const refreshToken = await config.get(`GOOGLE_REFRESH_TOKEN_${userId}`);
 
     if (refreshToken) {
         try {

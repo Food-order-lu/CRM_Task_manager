@@ -23,6 +23,7 @@ async function init() {
     // Setup event listeners
     document.getElementById('view-list')?.addEventListener('click', () => setViewMode('list'));
     document.getElementById('view-kanban')?.addEventListener('click', () => setViewMode('kanban'));
+    document.getElementById('btn-new-task')?.addEventListener('click', () => taskModal?.classList.add('active'));
 
     const btnToggleNewCommerce = document.getElementById('btn-toggle-new-commerce');
     const commerceSelectContainer = document.getElementById('commerce-select-container');
@@ -118,8 +119,14 @@ async function handleTaskSubmit(e) {
             toast.success('Tâche créée', `${taskData.name} a été ajouté.`);
             await fetchAllTasks();
         } else {
-            const err = await res.json();
-            toast.error('Erreur', err.error || 'Impossible de créer la tâche');
+            let errMsg = 'Impossible de créer la tâche';
+            try {
+                const err = await res.json();
+                errMsg = err.error || errMsg;
+            } catch (e) {
+                errMsg = `Erreur serveur (${res.status})`;
+            }
+            toast.error('Erreur', errMsg);
         }
     } catch (error) {
         console.error('Error creating task:', error);
