@@ -1,4 +1,5 @@
 import { API_URL } from './config.js';
+import { toast } from './utils/notifications.js';
 
 let currentUserId = 'Tiago'; // Default
 
@@ -50,7 +51,14 @@ export function updateSidebarUser(userId) {
 }
 
 export function initSidebar(initialUser = 'Tiago') {
-    currentUserId = initialUser;
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        currentUserId = user.name;
+    } else {
+        currentUserId = initialUser;
+    }
+
     checkGoogleStatus(currentUserId);
 
     // Polling is fine, but we should use the currentUserId
@@ -99,7 +107,10 @@ export function initSidebar(initialUser = 'Tiago') {
             checkGoogleStatus(currentUserId);
         }
     }, 10000);
-    // Logout
+    // Notifications
+    toast.requestPermission();
+    toast.initRealtime();
+
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.innerText = 'Se déconnecter'; // Ensure text is set

@@ -1,6 +1,7 @@
 import { API_URL } from './config.js';
 import { initSidebar } from './shared-sidebar.js';
 import { showConfirm } from './utils/confirm.js';
+import { toast } from './utils/notifications.js';
 
 // State
 export let showArchived = false;
@@ -237,12 +238,14 @@ document.getElementById('lead-form')?.addEventListener('submit', async (e) => {
 
         if (res.ok) {
             window.closeModal();
+            toast.success('Lead créé', `"${data.name}" a été ajouté.`);
             await fetchLeads();
         } else {
-            alert('Erreur lors de la création');
+            toast.error('Erreur', 'Impossible de créer le lead');
         }
     } catch (error) {
         console.error('Error:', error);
+        toast.error('Erreur Réseau', 'Le serveur est injoignable');
     }
 });
 

@@ -1,6 +1,7 @@
 import '../style.css';
 import { API_URL } from './config.js';
 import { initSidebar } from './shared-sidebar.js';
+import { toast } from './utils/notifications.js';
 
 // Initialization
 async function init() {
@@ -143,14 +144,15 @@ leadForm?.addEventListener('submit', async (e) => {
 
         if (res.ok) {
             closeModal();
+            toast.success('Lead créé', `"${data.name}" a été ajouté.`);
             await fetchStats();
             await fetchTasks();
         } else {
-            alert('Erreur lors de la création du lead');
+            toast.error('Erreur', 'Impossible de créer le lead');
         }
     } catch (err) {
         console.error(err);
-        alert('Erreur réseau');
+        toast.error('Erreur Réseau', 'Le serveur est injoignable');
     }
 });
 

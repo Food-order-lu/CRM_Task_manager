@@ -1,6 +1,7 @@
 import { API_URL } from './config.js';
 import { initSidebar, updateSidebarUser } from './shared-sidebar.js';
 import { showConfirm } from './utils/confirm.js';
+import { toast } from './utils/notifications.js';
 
 // State
 let currentUser = 'Tiago';
@@ -62,6 +63,11 @@ async function init() {
     taskForm?.addEventListener('submit', handleTaskSubmit);
 
     // Initial Fetch
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        currentUser = JSON.parse(userStr).name;
+    }
+
     initSidebar();
     await fetchAllTasks();
 }
@@ -109,14 +115,15 @@ async function handleTaskSubmit(e) {
             document.getElementById('commerce-select-container')?.classList.remove('hidden');
             const btn = document.getElementById('btn-toggle-new-commerce');
             if (btn) btn.innerText = '+ Nouveau';
+            toast.success('Tâche créée', `${taskData.name} a été ajouté.`);
             await fetchAllTasks();
         } else {
             const err = await res.json();
-            alert('Erreur: ' + (err.error || 'Impossible de créer la tâche'));
+            toast.error('Erreur', err.error || 'Impossible de créer la tâche');
         }
     } catch (error) {
         console.error('Error creating task:', error);
-        alert('Erreur: ' + error.message);
+        toast.error('Erreur', error.message);
     }
 }
 
