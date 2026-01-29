@@ -105,7 +105,6 @@ export const projects = {
 // --- Task Operations ---
 export const tasks = {
     getAll: async () => {
-        // Simple join using foreign key if RLS allows and relationships are named clearly
         const { data, error } = await supabase
             .from('tasks')
             .select('*, commerces(name)')
@@ -114,26 +113,59 @@ export const tasks = {
 
         if (error) throw error;
 
-        // Map commerce name to match old sqlite field
         return data.map(t => ({
             ...t,
+            dueDate: t.due_date,
+            timeSlot: t.time_slot,
+            isInPerson: t.is_in_person,
+            commerceId: t.commerce_id,
+            projectId: t.project_id,
+            parentId: t.parent_id,
+            googleEventId: t.google_event_id,
             commerceName: t.commerces?.name || null
         }));
     },
     getById: async (id) => {
         const { data, error } = await supabase.from('tasks').select('*').eq('id', id).single();
         if (error) throw error;
-        return data;
+        return {
+            ...data,
+            dueDate: data.due_date,
+            timeSlot: data.time_slot,
+            isInPerson: data.is_in_person,
+            commerceId: data.commerce_id,
+            projectId: data.project_id,
+            parentId: data.parent_id,
+            googleEventId: data.google_event_id
+        };
     },
     getByProject: async (projectId) => {
         const { data, error } = await supabase.from('tasks').select('*').eq('project_id', projectId).order('created_at', { ascending: true });
         if (error) throw error;
-        return data;
+        return data.map(t => ({
+            ...t,
+            dueDate: t.due_date,
+            timeSlot: t.time_slot,
+            isInPerson: t.is_in_person,
+            commerceId: t.commerce_id,
+            projectId: t.project_id,
+            parentId: t.parent_id,
+            googleEventId: t.google_event_id
+        }));
     },
     getByCommerce: async (commerceId) => {
         const { data, error } = await supabase.from('tasks').select('*').eq('commerce_id', commerceId).order('created_at', { ascending: true });
         if (error) throw error;
-        return data;
+        return data.map(t => ({
+            ...t,
+            dueDate: t.due_date,
+            timeSlot: t.time_slot,
+            isInPerson: t.is_in_person,
+            commerceId: t.commerce_id,
+            projectId: t.project_id,
+            parentId: t.parent_id,
+            googleEventId: t.google_event_id
+        }));
     },
     create: async (data) => {
         const { data: result, error } = await supabase.from('tasks').insert([
