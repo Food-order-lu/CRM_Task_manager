@@ -108,8 +108,36 @@ export function initSidebar(initialUser = 'Tiago') {
         }
     }, 10000);
     // Notifications
-    toast.requestPermission();
-    toast.initRealtime();
+    const initNotifications = async () => {
+        const hasPermission = "Notification" in window && Notification.permission === "granted";
+
+        // On mobile/strict browsers, we need a user gesture. 
+        // Let's add an "Enable Notifications" button if not granted.
+        if ("Notification" in window && Notification.permission === "default") {
+            if (!document.getElementById('btn-notif-enable')) {
+                const notifBtn = document.createElement('button');
+                notifBtn.id = 'btn-notif-enable';
+                notifBtn.className = 'w-full mt-2 py-2 text-xs font-bold rounded-lg bg-blue-500/10 text-blue-400 transition-all flex items-center justify-center space-x-2 border border-blue-500/10 hover:bg-blue-500/20';
+                notifBtn.innerHTML = `<span>🔔 Activer notifications</span>`;
+                configSection?.appendChild(notifBtn);
+
+                notifBtn.onclick = async () => {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        notifBtn.remove();
+                        toast.success('Notifications activées', 'Vous recevrez désormais les alertes en temps réel.');
+                        toast.initRealtime();
+                    } else {
+                        alert('Les notifications ont été refusées. Vous pouvez les activer dans les réglages de votre navigateur.');
+                    }
+                };
+            }
+        } else if (hasPermission) {
+            toast.initRealtime();
+        }
+    };
+
+    initNotifications();
 
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
