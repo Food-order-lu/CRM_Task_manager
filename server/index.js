@@ -351,7 +351,8 @@ app.get('/api/tasks', async (req, res) => {
             isInPerson: t.is_in_person === 1 || t.is_in_person === true,
             projectId: t.project_id,
             commerceId: t.commerce_id,
-            commerceName: t.commerceName
+            commerceName: t.commerceName,
+            notes: t.notes
         }));
         res.json(allTasks);
     } catch (error) {
@@ -360,7 +361,7 @@ app.get('/api/tasks', async (req, res) => {
 });
 
 app.post('/api/tasks', async (req, res) => {
-    const { name, category, assignee, dueDate, time, status, isInPerson, projectId, commerceId, parentId } = req.body;
+    const { name, category, assignee, dueDate, time, status, isInPerson, projectId, commerceId, parentId, notes } = req.body;
     try {
         const task = await tasks.create({
             name,
@@ -372,7 +373,8 @@ app.post('/api/tasks', async (req, res) => {
             isInPerson: isInPerson || false,
             projectId,
             commerceId,
-            parentId
+            parentId,
+            notes
         });
 
         if (projectId) await updateProjectProgress(projectId);
@@ -394,7 +396,7 @@ app.post('/api/tasks', async (req, res) => {
 
 app.patch('/api/tasks/:id', async (req, res) => {
     const { id } = req.params;
-    const { status, name, dueDate, timeSlot, assignee, isInPerson } = req.body;
+    const { status, name, dueDate, timeSlot, assignee, isInPerson, notes } = req.body;
     try {
         const currentTask = await tasks.getById(id);
         if (!currentTask) return res.status(404).json({ error: 'Task not found' });
@@ -406,6 +408,7 @@ app.patch('/api/tasks/:id', async (req, res) => {
         if (timeSlot !== undefined) updates.timeSlot = timeSlot;
         if (assignee !== undefined) updates.assignee = assignee;
         if (isInPerson !== undefined) updates.isInPerson = isInPerson;
+        if (notes !== undefined) updates.notes = notes;
 
         await tasks.update(id, updates);
 

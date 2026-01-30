@@ -98,33 +98,38 @@ function updateUserUI() {
 
 function createTaskNode(task, level) {
     const container = document.createElement('div');
-    container.className = `task-tree-node mt-4`;
+    container.className = `task-tree-node mt-3`;
 
     const isDone = task.status === 'Done' || task.status === 'Terminé';
 
     container.innerHTML = `
-        <div class="task-item glass-card p-4 flex items-center justify-between group/item transition-all hover:border-white/20">
-            <div class="flex items-center space-x-4 flex-1">
+        <div class="task-item glass-card p-3 md:p-4 flex items-center justify-between group/item transition-all hover:border-white/20">
+            <div class="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
                 <input type="checkbox" ${isDone ? 'checked' : ''} 
-                    class="w-5 h-5 rounded border-gray-600 text-blue-500 bg-liv-main cursor-pointer"
+                    class="w-5 h-5 md:w-6 md:h-6 rounded border-gray-600 text-blue-500 bg-liv-main cursor-pointer shrink-0"
                     onchange="toggleTask('${task.id}', this.checked)">
                 
-                <div class="flex-1">
-                    <span class="level-${level} ${isDone ? 'line-through opacity-50' : ''}">${task.name}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="level-${level} ${isDone ? 'line-through opacity-50 text-gray-500 font-normal text-sm md:text-base' : 'text-white text-sm md:text-base'} truncate pr-2">${task.name}</div>
                     <div class="flex items-center space-x-2 mt-1">
-                        <span class="text-[10px] px-1.5 py-0.5 bg-white/5 rounded text-gray-500 font-bold uppercase">${task.assignee}</span>
-                        <span class="text-[10px] text-gray-600">${task.category}</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-blue-500/10 rounded text-blue-400 font-bold uppercase border border-blue-500/10">${task.assignee}</span>
+                        <span class="text-[9px] text-gray-500 font-medium">${task.category}</span>
+                        ${task.notes ? `
+                            <button onclick="window.showTaskNote('${task.id}')" class="text-[10px] text-orange-400 hover:text-orange-300 flex items-center">
+                                <span class="mr-1">📝</span> Note
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
             
-            <div class="task-actions opacity-0 group-hover/item:opacity-100 flex items-center space-x-2 transition-all">
-                <button class="p-2 hover:bg-white/10 rounded-lg text-blue-400" onclick="openAddTaskModal('${task.id}', '${task.name.replace(/'/g, "\\'")}')" title="Ajouter une sous-tâche">
+            <div class="task-actions flex items-center space-x-1 shrink-0 lg:opacity-0 lg:group-hover/item:opacity-100 transition-all">
+                <button class="p-2 hover:bg-blue-500/10 rounded-lg text-blue-400" onclick="openAddTaskModal('${task.id}', '${task.name.replace(/'/g, "\\'")}')" title="Ajouter une sous-tâche">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </button>
-                <button class="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400" onclick="deleteTask('${task.id}')">
+                <button class="p-2 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-400" onclick="deleteTask('${task.id}')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.177H8.082a2.25 2.25 0 01-2.244-2.177L7.103 5.42m11.021-3.112a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67m9.914 0a1.65 1.65 0 00-1.803-1.67L10.5 2.5a1.65 1.65 0 00-1.803 1.67" />
                     </svg>
@@ -196,7 +201,8 @@ taskForm.onsubmit = async (e) => {
         projectId,
         parentId: parentId || null,
         status: 'To do',
-        category: '🔧 Opérations'
+        category: '🔧 Opérations',
+        notes: document.getElementById('task-notes').value || null
     };
 
     try {
@@ -218,3 +224,20 @@ taskForm.onsubmit = async (e) => {
 // Initial Load
 fetchProjectTasks();
 initSidebar();
+
+window.showTaskNote = (id) => {
+    const findTask = (nodes, id) => {
+        for (const n of nodes) {
+            if (n.id === id) return n;
+            if (n.subTasks) {
+                const found = findTask(n.subTasks, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+    const t = findTask(taskTree, id);
+    if (t && t.notes) {
+        alert(`Note pour "${t.name}":\n\n${t.notes}`);
+    }
+};

@@ -362,7 +362,12 @@ function createKanbanColumn(title, statusKey, columnTasks, styleClass) {
             <div class="p-4 flex-1 space-y-3 min-h-[300px]">
                 ${columnTasks.map(t => `
                     <div class="glass-card p-4 hover:border-blue-500/30 transition-all cursor-move relative group" draggable="true" ondragstart="window.dragTask(event, '${t.id}')">
-                        <div class="font-bold text-sm mb-2 ${t.status === 'Done' ? 'line-through text-gray-500' : ''}">${t.name}</div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="font-bold text-sm ${t.status === 'Done' ? 'line-through text-gray-500' : ''}">${t.name}</div>
+                            ${t.notes ? `
+                                <button class="text-xs p-1 bg-orange-500/10 text-orange-400 rounded-md hover:bg-orange-500/20" onclick="window.showTaskNote('${t.id}')">📝</button>
+                            ` : ''}
+                        </div>
                         ${t.commerceName ? `<div class="text-[10px] text-orange-400 font-bold mb-3 flex items-center">🏪 ${t.commerceName}</div>` : ''}
                         <div class="flex justify-between items-center text-[10px] text-gray-400">
                             <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">${t.category ? (t.category.includes(' ') ? t.category.split(' ')[1] : t.category) : '-'}</span>
