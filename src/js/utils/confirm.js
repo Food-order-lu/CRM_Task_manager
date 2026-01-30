@@ -17,7 +17,7 @@ export function showConfirm({ title, message, confirmText = 'Confirmer', cancelT
             <div class="modal-content modal-confirm">
                 <div class="mb-6">
                     <h3 class="text-xl font-bold text-white mb-2">${title}</h3>
-                    <p class="text-gray-400">${message}</p>
+                    <div class="text-gray-400 whitespace-pre-wrap text-sm leading-relaxed">${message}</div>
                 </div>
                 <div class="flex justify-center space-x-3">
                     <button id="confirm-cancel" class="btn-secondary px-6">${cancelText}</button>

@@ -1,6 +1,8 @@
 import '../style.css';
 import { API_URL } from './config.js';
 import { initSidebar, updateSidebarUser } from './shared-sidebar.js';
+import { showConfirm } from './utils/confirm.js';
+import { marked } from 'marked';
 import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -37,6 +39,18 @@ export async function initVisits() {
             const isMine = visit.assignee && visit.assignee.includes(currentUser);
             const card = document.createElement('div');
             card.className = `p-4 rounded-xl border flex justify-between items-center transition-colors cursor-pointer group ${isMine ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/5 border-white/5 hover:bg-white/10'}`;
+
+            card.onclick = () => {
+                if (visit.notes) {
+                    marked.setOptions({ breaks: true, gfm: true });
+                    showConfirm({
+                        title: `Note: ${visit.name}`,
+                        message: marked.parse(visit.notes),
+                        confirmText: 'Fermer',
+                        type: 'info'
+                    });
+                }
+            };
 
             const timeDisplay = visit.timeSlot ? `<span class="text-blue-400 font-bold">${visit.timeSlot}</span> • ` : '';
 
@@ -102,19 +116,37 @@ export async function initVisits() {
                 // Build datetime if time is available
                 let startDateTime = v.dueDate;
                 if (v.dueDate && v.timeSlot) {
-                    startDateTime = `${v.dueDate}T${v.timeSlot}`;
+                    startDateTime = `${v.dueDate}T${v.timeSlot} `;
                 }
                 return {
                     title: v.name,
                     start: startDateTime,
                     color: v.assignee?.includes(currentUser) ? '#3b82f6' : (v.assignee?.includes('Dani') ? '#a855f7' : '#64748b'),
                     allDay: !v.timeSlot,
-                    extendedProps: { assignee: v.assignee, timeSlot: v.timeSlot }
+                    extendedProps: { assignee: v.assignee, timeSlot: v.timeSlot, notes: v.notes }
                 };
             }),
             eventClick: function (info) {
                 const time = info.event.extendedProps.timeSlot || 'Journée entière';
-                alert(`Visite : ${info.event.title}\nHeure : ${time}\nAssigné à : ${info.event.extendedProps.assignee}`);
+                const notes = info.event.extendedProps.notes || '';
+                marked.setOptions({ breaks: true, gfm: true });
+                const message = `
+            < div class="mb-4" >
+                <span class="text-blue-400 font-bold">Heure :</span> ${time} <br>
+                    <span class="text-blue-400 font-bold">Assigné à :</span> ${info.event.extendedProps.assignee}
+                </div>
+                    ${notes ? `<div class="mt-4 pt-4 border-t border-white/10">
+                        <div class="font-bold mb-2">Note :</div>
+                        <div class="prose prose-invert">${marked.parse(notes)}</div>
+                    </div>` : ''
+                    }
+        `;
+                showConfirm({
+                    title: info.event.title,
+                    message: message,
+                    confirmText: 'Fermer',
+                    type: 'info'
+                });
             },
             height: '100%',
             eventTextColor: '#ffffff',
@@ -134,20 +166,20 @@ export async function initVisits() {
 // Global styles for FullCalendar (dark mode)
 const style = document.createElement('style');
 style.textContent = `
-    .fc { font-family: 'Inter', sans-serif; color: #fff; }
-    .fc-theme-standard td, .fc-theme-standard th { border: 1px solid rgba(255, 255, 255, 0.05); }
-    .fc .fc-button-primary { background-color: rgba(255, 255, 255, 0.05); border: none; font-size: 0.8rem; }
-    .fc .fc-button-primary:not(:disabled):active, .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #3b82f6; }
-    .fc .fc-button-primary:hover { background-color: rgba(255, 255, 255, 0.1); }
-    .fc .fc-toolbar-title { font-size: 1rem; font-weight: 700; }
-    .fc-daygrid-day-number { font-size: 0.8rem; padding: 4px; color: #94a3b8; }
-    .fc-day-today { background: rgba(59, 130, 246, 0.05) !important; }
-    .fc-col-header-cell-cushion { font-size: 0.75rem; text-transform: uppercase; color: #64748b; text-decoration: none !important; }
-    .fc-daygrid-event { font-size: 0.75rem; border-radius: 4px; padding: 2px 4px; border: none; }
-    .fc-h-event { background-color: #3b82f6; }
-    .fc-scrollgrid { border: none !important; }
-    .fc-view-harness { background: transparent; }
-`;
+            .fc { font - family: 'Inter', sans - serif; color: #fff; }
+    .fc - theme - standard td, .fc - theme - standard th { border: 1px solid rgba(255, 255, 255, 0.05); }
+    .fc.fc - button - primary { background - color: rgba(255, 255, 255, 0.05); border: none; font - size: 0.8rem; }
+    .fc.fc - button - primary: not(: disabled): active, .fc.fc - button - primary: not(: disabled).fc - button - active { background - color: #3b82f6; }
+    .fc.fc - button - primary:hover { background - color: rgba(255, 255, 255, 0.1); }
+    .fc.fc - toolbar - title { font - size: 1rem; font - weight: 700; }
+    .fc - daygrid - day - number { font - size: 0.8rem; padding: 4px; color: #94a3b8; }
+    .fc - day - today { background: rgba(59, 130, 246, 0.05)!important; }
+    .fc - col - header - cell - cushion { font - size: 0.75rem; text - transform: uppercase; color: #64748b; text - decoration: none!important; }
+    .fc - daygrid - event { font - size: 0.75rem; border - radius: 4px; padding: 2px 4px; border: none; }
+    .fc - h - event { background - color: #3b82f6; }
+    .fc - scrollgrid { border: none!important; }
+    .fc - view - harness { background: transparent; }
+        `;
 document.head.appendChild(style);
 
 // Modal Logic for Visits

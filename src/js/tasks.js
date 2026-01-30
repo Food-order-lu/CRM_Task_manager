@@ -2,6 +2,7 @@ import { API_URL } from './config.js';
 import { initSidebar, updateSidebarUser } from './shared-sidebar.js';
 import { showConfirm } from './utils/confirm.js';
 import { toast } from './utils/notifications.js';
+import { marked } from 'marked';
 
 // State
 let currentUser = 'Tiago';
@@ -514,9 +515,17 @@ window.openEditTaskModal = async (taskId) => {
 window.showTaskNote = (taskId) => {
     const task = window.allTasks.find(t => t.id === taskId);
     if (task && task.notes) {
+        // Configure marked for line breaks
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+
+        const htmlContent = marked.parse(task.notes);
+
         showConfirm({
             title: `Note: ${task.name}`,
-            message: task.notes,
+            message: htmlContent,
             confirmText: 'Fermer',
             type: 'info'
         });

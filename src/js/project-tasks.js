@@ -1,6 +1,8 @@
 import '../style.css';
 import { API_URL } from './config.js';
 import { initSidebar, updateSidebarUser } from './shared-sidebar.js';
+import { showConfirm } from './utils/confirm.js';
+import { marked } from 'marked';
 
 // Get project info from URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -238,6 +240,13 @@ window.showTaskNote = (id) => {
     };
     const t = findTask(taskTree, id);
     if (t && t.notes) {
-        alert(`Note pour "${t.name}":\n\n${t.notes}`);
+        marked.setOptions({ breaks: true, gfm: true });
+        const htmlContent = marked.parse(t.notes);
+        showConfirm({
+            title: `Note: ${t.name}`,
+            message: htmlContent,
+            confirmText: 'Fermer',
+            type: 'info'
+        });
     }
 };
