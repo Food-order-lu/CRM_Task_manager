@@ -338,24 +338,12 @@ async function updateProjectProgress(projectId) {
 
 // --- Tasks Routes ---
 app.get('/api/tasks', async (req, res) => {
+    console.log(`[${new Date().toISOString()}] GET /api/tasks`);
     try {
-        const rawTasks = await tasks.getAll();
-        const allTasks = rawTasks.map(t => ({
-            id: t.id,
-            name: t.name,
-            category: t.category,
-            status: t.status,
-            assignee: t.assignee,
-            dueDate: t.due_date,
-            timeSlot: t.time_slot,
-            isInPerson: t.is_in_person === 1 || t.is_in_person === true,
-            projectId: t.project_id,
-            commerceId: t.commerce_id,
-            commerceName: t.commerceName,
-            notes: t.notes
-        }));
+        const allTasks = await tasks.getAll();
         res.json(allTasks);
     } catch (error) {
+        console.error('Error in GET /api/tasks:', error);
         res.status(500).json({ error: error.message });
     }
 });

@@ -49,6 +49,7 @@ export async function initVisits() {
                         <h4 class="font-bold text-lg group-hover:text-blue-400 transition-colors">${visit.name}</h4>
                         <p class="text-sm ${isMine ? 'text-blue-300' : 'text-gray-400'}">
                             ${timeDisplay}${visit.assignee} • ${visit.category}
+                            ${(visit.notes && visit.notes.trim()) ? '<span class="ml-2 inline-flex items-center text-orange-400" title="Possède une note">📝</span>' : ''}
                         </p>
                     </div>
                 </div>

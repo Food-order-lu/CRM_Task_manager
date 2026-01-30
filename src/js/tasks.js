@@ -307,12 +307,12 @@ function createListRow(task) {
                 <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5 whitespace-nowrap">${categoryName}</span>
             </td>
             <td class="p-4 text-center">
-                ${task.notes ? `
-                    <button class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all" 
+                ${(task.notes && task.notes.trim()) ? `
+                    <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all mx-auto shadow-lg" 
                         onclick="window.showTaskNote('${task.id}')" title="Voir la note">
-                        📝
+                        <span class="text-lg">📝</span>
                     </button>
-                ` : '<span class="text-gray-600">-</span>'}
+                ` : '<span class="text-gray-600/50 italic text-[10px]">aucun</span>'}
             </td>
             <td class="p-4">
                 <div class="flex items-center text-xs text-gray-400 whitespace-nowrap">
