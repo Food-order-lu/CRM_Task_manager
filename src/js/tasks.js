@@ -23,7 +23,15 @@ async function init() {
     // Setup event listeners
     document.getElementById('view-list')?.addEventListener('click', () => setViewMode('list'));
     document.getElementById('view-kanban')?.addEventListener('click', () => setViewMode('kanban'));
-    document.getElementById('btn-new-task')?.addEventListener('click', () => taskModal?.classList.add('active'));
+    document.getElementById('btn-new-task')?.addEventListener('click', () => {
+        taskForm.reset();
+        document.getElementById('editing-task-id').value = '';
+        const modalTitle = taskModal.querySelector('h3');
+        if (modalTitle) modalTitle.innerText = 'Nouvelle Tâche';
+        const submitBtn = document.getElementById('submit-task-btn');
+        if (submitBtn) submitBtn.innerText = 'Créer la tâche';
+        taskModal?.classList.add('active');
+    });
 
     const btnToggleNewCommerce = document.getElementById('btn-toggle-new-commerce');
     const commerceSelectContainer = document.getElementById('commerce-select-container');
@@ -77,6 +85,7 @@ async function handleTaskSubmit(e) {
     e.preventDefault();
     const formData = new FormData(taskForm);
     const assignees = Array.from(taskForm.querySelectorAll('input[name="assignees"]:checked')).map(cb => cb.value);
+    const editingTaskId = formData.get('editingTaskId');
 
     let commerceId = formData.get('commerceId');
     const newCommerceName = document.getElementById('new-commerce-name')?.value;
@@ -99,11 +108,15 @@ async function handleTaskSubmit(e) {
             assignee: assignees.join(', '),
             dueDate: formData.get('dueDate') || null,
             status: formData.get('status'),
-            commerceId: commerceId || null
+            commerceId: commerceId || null,
+            notes: formData.get('notes') || null
         };
 
-        const res = await fetch(`${API_URL}/tasks`, {
-            method: 'POST',
+        const url = editingTaskId ? `${API_URL}/tasks/${editingTaskId}` : `${API_URL}/tasks`;
+        const method = editingTaskId ? 'PATCH' : 'POST';
+
+        const res = await fetch(url, {
+            method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(taskData)
         });
@@ -116,10 +129,12 @@ async function handleTaskSubmit(e) {
             document.getElementById('commerce-select-container')?.classList.remove('hidden');
             const btn = document.getElementById('btn-toggle-new-commerce');
             if (btn) btn.innerText = '+ Nouveau';
-            toast.success('Tâche créée', `${taskData.name} a été ajouté.`);
+
+            const successMsg = editingTaskId ? 'Tâche mise à jour' : 'Tâche créée';
+            toast.success(successMsg, `${taskData.name} a été enregistré.`);
             await fetchAllTasks();
         } else {
-            let errMsg = 'Impossible de créer la tâche';
+            let errMsg = editingTaskId ? 'Impossible de modifier la tâche' : 'Impossible de créer la tâche';
             try {
                 const err = await res.json();
                 errMsg = err.error || errMsg;
@@ -129,7 +144,7 @@ async function handleTaskSubmit(e) {
             toast.error('Erreur', errMsg);
         }
     } catch (error) {
-        console.error('Error creating task:', error);
+        console.error('Error submitting task:', error);
         toast.error('Erreur', error.message);
     }
 }
@@ -252,8 +267,9 @@ function renderSection(title, sectionTasks, color, extraClass = '') {
                             <th class="p-4">Tâche</th>
                             <th class="p-4">Commerce</th>
                             <th class="p-4 hidden md:table-cell">Catégorie</th>
+                            <th class="p-4">Note</th>
                             <th class="p-4">Date</th>
-                            <th class="p-4 text-center">Responsable</th>
+                            <th class="p-4 text-center">Resp.</th>
                             <th class="p-4 text-center">Actions</th>
                         </tr>
                     </thead>
@@ -290,6 +306,14 @@ function createListRow(task) {
             <td class="p-4 hidden md:table-cell">
                 <span class="text-[10px] bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/5 whitespace-nowrap">${categoryName}</span>
             </td>
+            <td class="p-4 text-center">
+                ${task.notes ? `
+                    <button class="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all" 
+                        onclick="window.showTaskNote('${task.id}')" title="Voir la note">
+                        📝
+                    </button>
+                ` : '<span class="text-gray-600">-</span>'}
+            </td>
             <td class="p-4">
                 <div class="flex items-center text-xs text-gray-400 whitespace-nowrap">
                     ${dateStatus.dot ? `<span class="w-1.5 h-1.5 rounded-full ${dateStatus.dot} mr-2"></span>` : ''}
@@ -301,13 +325,14 @@ function createListRow(task) {
             </td>
             <td class="p-4 text-center">
                 <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button class="text-gray-400 hover:text-blue-400 p-1" onclick="window.openEditTaskModal('${task.id}')" title="Modifier">✏️</button>
                     ${isDone && task.status !== 'Archived' ? `
-                        <button class="text-gray-400 hover:text-white" onclick="window.archiveTask('${task.id}', true)">📦</button>
+                        <button class="text-gray-400 hover:text-white p-1" onclick="window.archiveTask('${task.id}', true)" title="Archiver">📦</button>
                     ` : ''}
                     ${task.status === 'Archived' ? `
-                        <button class="text-gray-400 hover:text-white" onclick="window.archiveTask('${task.id}', false)">↩</button>
+                        <button class="text-gray-400 hover:text-white p-1" onclick="window.archiveTask('${task.id}', false)" title="Désarchiver">↩</button>
                     ` : ''}
-                    <button class="text-gray-400 hover:text-red-400" onclick="window.deleteTask('${task.id}', '${task.name.replace(/'/g, "\\'")}')">✕</button>
+                    <button class="text-gray-400 hover:text-red-400 p-1" onclick="window.deleteTask('${task.id}', '${task.name.replace(/'/g, "\\'")}')" title="Supprimer">✕</button>
                 </div>
             </td>
         </tr>
@@ -447,6 +472,51 @@ function updateViewToggleUI() {
         if (btn) btn.className = `view-mode-switch px-2 py-1.5 transition-all rounded ${currentViewMode === m ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-400 hover:bg-white/10'}`;
     });
 }
+
+window.openEditTaskModal = async (taskId) => {
+    try {
+        const task = window.allTasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        // Fill form
+        taskForm.reset();
+        document.getElementById('editing-task-id').value = task.id;
+        const modalTitle = taskModal.querySelector('h3');
+        if (modalTitle) modalTitle.innerText = 'Modifier la tâche';
+        const submitBtn = document.getElementById('submit-task-btn');
+        if (submitBtn) submitBtn.innerText = 'Mettre à jour';
+
+        taskForm.querySelector('[name="name"]').value = task.name;
+        taskForm.querySelector('[name="category"]').value = task.category || '🔧 Opérations';
+        taskForm.querySelector('[name="status"]').value = task.status || 'To do';
+        taskForm.querySelector('[name="dueDate"]').value = task.dueDate || '';
+        taskForm.querySelector('[name="notes"]').value = task.notes || '';
+        taskForm.querySelector('[name="commerceId"]').value = task.commerceId || '';
+
+        // Assignees
+        const assignees = (task.assignee || '').split(',').map(s => s.trim());
+        taskForm.querySelectorAll('input[name="assignees"]').forEach(cb => {
+            cb.checked = assignees.includes(cb.value);
+        });
+
+        taskModal.classList.add('active');
+    } catch (e) {
+        console.error(e);
+        toast.error('Erreur', 'Impossible de charger les données de la tâche');
+    }
+};
+
+window.showTaskNote = (taskId) => {
+    const task = window.allTasks.find(t => t.id === taskId);
+    if (task && task.notes) {
+        showConfirm({
+            title: `Note: ${task.name}`,
+            message: task.notes,
+            confirmText: 'Fermer',
+            type: 'info'
+        });
+    }
+};
 
 // Global Start
 if (document.readyState === 'loading') {

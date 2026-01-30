@@ -226,9 +226,17 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-input h-24 resize-none"
+                        placeholder="Détails supplémentaires..."></textarea>
+                </div>
+
+                <input type="hidden" name="editingTaskId" id="editing-task-id">
+
                 <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" id="cancel-modal" class="btn-secondary">Annuler</button>
-                    <button type="submit" class="btn-primary px-8">Créer la tâche</button>
+                    <button type="submit" id="submit-task-btn" class="btn-primary px-8">Enregistrer</button>
                 </div>
             </form>
         </div>
